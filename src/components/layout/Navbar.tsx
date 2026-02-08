@@ -1,8 +1,16 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Phone, ChevronDown, Bike, Car, Zap, MapPin } from "lucide-react";
+import { Menu, X, Phone, ChevronDown, Bike, Car, Zap, MapPin, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const vehicleTypes = [
   { name: "Bikes", icon: Bike, href: "/vehicles?type=bike" },
@@ -19,6 +27,13 @@ export function Navbar() {
   const [showVehicles, setShowVehicles] = useState(false);
   const [showCities, setShowCities] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, profile, userRole, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   const navLinks = [
     { name: "Home", href: "/" },
@@ -126,12 +141,41 @@ export function Navbar() {
               <Phone className="w-4 h-4" />
               +91 123 456 7890
             </a>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/login">Login</Link>
-            </Button>
-            <Button size="sm" asChild>
-              <Link to="/vehicles">Book Now</Link>
-            </Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <User className="w-4 h-4" />
+                    {profile?.full_name?.split(' ')[0] || 'Account'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {userRole === "partner" ? (
+                    <DropdownMenuItem asChild>
+                      <Link to="/partner/dashboard">Partner Dashboard</Link>
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile">My Profile</Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/login">Login</Link>
+                </Button>
+                <Button size="sm" asChild>
+                  <Link to="/vehicles">Book Now</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -164,12 +208,32 @@ export function Navbar() {
                   </Link>
                 ))}
                 <div className="flex flex-col gap-3 px-4 pt-4">
-                  <Button variant="outline" asChild className="w-full">
-                    <Link to="/login">Login</Link>
-                  </Button>
-                  <Button asChild className="w-full">
-                    <Link to="/vehicles">Book Now</Link>
-                  </Button>
+                  {user ? (
+                    <>
+                      {userRole === "partner" ? (
+                        <Button variant="outline" asChild className="w-full">
+                          <Link to="/partner/dashboard">Partner Dashboard</Link>
+                        </Button>
+                      ) : (
+                        <Button variant="outline" asChild className="w-full">
+                          <Link to="/profile">My Profile</Link>
+                        </Button>
+                      )}
+                      <Button variant="destructive" className="w-full" onClick={handleSignOut}>
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Logout
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button variant="outline" asChild className="w-full">
+                        <Link to="/login">Login</Link>
+                      </Button>
+                      <Button asChild className="w-full">
+                        <Link to="/vehicles">Book Now</Link>
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </motion.div>

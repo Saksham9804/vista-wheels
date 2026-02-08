@@ -3,30 +3,124 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+
+// Pages
 import Index from "./pages/Index";
 import Vehicles from "./pages/Vehicles";
 import VehicleDetail from "./pages/VehicleDetail";
 import Booking from "./pages/Booking";
 import NotFound from "./pages/NotFound";
 
+// Auth Pages
+import CustomerLogin from "./pages/auth/CustomerLogin";
+import CustomerSignup from "./pages/auth/CustomerSignup";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import PartnerLogin from "./pages/auth/PartnerLogin";
+import PartnerSignup from "./pages/auth/PartnerSignup";
+
+// Partner Dashboard
+import PartnerDashboard from "./pages/partner/PartnerDashboard";
+
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/vehicles" element={<Vehicles />} />
-          <Route path="/vehicles/:id" element={<VehicleDetail />} />
-          <Route path="/booking/:id" element={<Booking />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Index />} />
+            <Route path="/vehicles" element={<Vehicles />} />
+            <Route path="/vehicles/:id" element={<VehicleDetail />} />
+            
+            {/* Customer Auth Routes */}
+            <Route path="/login" element={<CustomerLogin />} />
+            <Route path="/register" element={<CustomerSignup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            
+            {/* Partner Auth Routes */}
+            <Route path="/partner/login" element={<PartnerLogin />} />
+            <Route path="/partner/signup" element={<PartnerSignup />} />
+            
+            {/* Protected Customer Routes */}
+            <Route
+              path="/booking/:id"
+              element={
+                <ProtectedRoute allowedRoles={["customer"]}>
+                  <Booking />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Protected Partner Routes */}
+            <Route
+              path="/partner/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["partner"]} redirectTo="/partner/login">
+                  <PartnerDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/partner/dashboard/vehicles"
+              element={
+                <ProtectedRoute allowedRoles={["partner"]} redirectTo="/partner/login">
+                  <PartnerDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/partner/dashboard/bookings"
+              element={
+                <ProtectedRoute allowedRoles={["partner"]} redirectTo="/partner/login">
+                  <PartnerDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/partner/dashboard/earnings"
+              element={
+                <ProtectedRoute allowedRoles={["partner"]} redirectTo="/partner/login">
+                  <PartnerDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/partner/dashboard/analytics"
+              element={
+                <ProtectedRoute allowedRoles={["partner"]} redirectTo="/partner/login">
+                  <PartnerDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/partner/dashboard/settings"
+              element={
+                <ProtectedRoute allowedRoles={["partner"]} redirectTo="/partner/login">
+                  <PartnerDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/partner/dashboard/support"
+              element={
+                <ProtectedRoute allowedRoles={["partner"]} redirectTo="/partner/login">
+                  <PartnerDashboard />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </TooltipProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 

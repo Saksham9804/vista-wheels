@@ -14,16 +14,380 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_email: string | null
+          customer_id: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          duration: string | null
+          id: string
+          notes: string | null
+          partner_id: string
+          payment_status: string | null
+          pickup_location: string | null
+          pickup_time: string
+          return_time: string
+          security_deposit: number | null
+          status: string | null
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          customer_email?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          duration?: string | null
+          id?: string
+          notes?: string | null
+          partner_id: string
+          payment_status?: string | null
+          pickup_location?: string | null
+          pickup_time: string
+          return_time: string
+          security_deposit?: number | null
+          status?: string | null
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_email?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          duration?: string | null
+          id?: string
+          notes?: string | null
+          partner_id?: string
+          payment_status?: string | null
+          pickup_location?: string | null
+          pickup_time?: string
+          return_time?: string
+          security_deposit?: number | null
+          status?: string | null
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_documents: {
+        Row: {
+          document_type: string
+          document_url: string
+          id: string
+          partner_id: string
+          uploaded_at: string
+          verified: boolean | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          document_type: string
+          document_url: string
+          id?: string
+          partner_id: string
+          uploaded_at?: string
+          verified?: boolean | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          document_type?: string
+          document_url?: string
+          id?: string
+          partner_id?: string
+          uploaded_at?: string
+          verified?: boolean | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_documents_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partners: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          business_name: string
+          business_type: Database["public"]["Enums"]["business_type"]
+          city: string
+          created_at: string
+          email: string
+          id: string
+          number_of_vehicles: number | null
+          phone: string
+          phone_verified: boolean | null
+          profile_photo: string | null
+          rating: number | null
+          rejection_reason: string | null
+          status: Database["public"]["Enums"]["partner_status"] | null
+          total_bookings: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          business_name: string
+          business_type?: Database["public"]["Enums"]["business_type"]
+          city: string
+          created_at?: string
+          email: string
+          id?: string
+          number_of_vehicles?: number | null
+          phone: string
+          phone_verified?: boolean | null
+          profile_photo?: string | null
+          rating?: number | null
+          rejection_reason?: string | null
+          status?: Database["public"]["Enums"]["partner_status"] | null
+          total_bookings?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          business_name?: string
+          business_type?: Database["public"]["Enums"]["business_type"]
+          city?: string
+          created_at?: string
+          email?: string
+          id?: string
+          number_of_vehicles?: number | null
+          phone?: string
+          phone_verified?: boolean | null
+          profile_photo?: string | null
+          rating?: number | null
+          rejection_reason?: string | null
+          status?: Database["public"]["Enums"]["partner_status"] | null
+          total_bookings?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          last_login: string | null
+          phone: string | null
+          phone_verified: boolean | null
+          profile_photo: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          last_login?: string | null
+          phone?: string | null
+          phone_verified?: boolean | null
+          profile_photo?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          last_login?: string | null
+          phone?: string | null
+          phone_verified?: boolean | null
+          profile_photo?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          available: boolean | null
+          brand: string
+          color: string | null
+          created_at: string
+          engine_capacity: number | null
+          features: string[] | null
+          fuel_type: string | null
+          id: string
+          max_rental_duration: string | null
+          mileage: number | null
+          min_rental_duration: string | null
+          model: string | null
+          name: string
+          partner_id: string
+          photos: string[] | null
+          pickup_location: string | null
+          price_per_day: number
+          price_per_month: number | null
+          price_per_week: number | null
+          registration_number: string
+          seat_capacity: number | null
+          security_deposit: number | null
+          status: string | null
+          transmission: string | null
+          updated_at: string
+          vehicle_type: string
+          year: number | null
+        }
+        Insert: {
+          available?: boolean | null
+          brand: string
+          color?: string | null
+          created_at?: string
+          engine_capacity?: number | null
+          features?: string[] | null
+          fuel_type?: string | null
+          id?: string
+          max_rental_duration?: string | null
+          mileage?: number | null
+          min_rental_duration?: string | null
+          model?: string | null
+          name: string
+          partner_id: string
+          photos?: string[] | null
+          pickup_location?: string | null
+          price_per_day: number
+          price_per_month?: number | null
+          price_per_week?: number | null
+          registration_number: string
+          seat_capacity?: number | null
+          security_deposit?: number | null
+          status?: string | null
+          transmission?: string | null
+          updated_at?: string
+          vehicle_type: string
+          year?: number | null
+        }
+        Update: {
+          available?: boolean | null
+          brand?: string
+          color?: string | null
+          created_at?: string
+          engine_capacity?: number | null
+          features?: string[] | null
+          fuel_type?: string | null
+          id?: string
+          max_rental_duration?: string | null
+          mileage?: number | null
+          min_rental_duration?: string | null
+          model?: string | null
+          name?: string
+          partner_id?: string
+          photos?: string[] | null
+          pickup_location?: string | null
+          price_per_day?: number
+          price_per_month?: number | null
+          price_per_week?: number | null
+          registration_number?: string
+          seat_capacity?: number | null
+          security_deposit?: number | null
+          status?: string | null
+          transmission?: string | null
+          updated_at?: string
+          vehicle_type?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_partner_id: { Args: { _user_id: string }; Returns: string }
+      get_profile_id: { Args: { _user_id: string }; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "customer" | "partner" | "admin"
+      business_type:
+        | "individual"
+        | "small_business"
+        | "rental_company"
+        | "franchise"
+      partner_status:
+        | "pending_verification"
+        | "approved"
+        | "rejected"
+        | "suspended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +514,20 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["customer", "partner", "admin"],
+      business_type: [
+        "individual",
+        "small_business",
+        "rental_company",
+        "franchise",
+      ],
+      partner_status: [
+        "pending_verification",
+        "approved",
+        "rejected",
+        "suspended",
+      ],
+    },
   },
 } as const
