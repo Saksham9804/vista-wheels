@@ -8,7 +8,6 @@ import {
   Star,
   Fuel,
   Gauge,
-  Calendar,
   MapPin,
   Shield,
   HardHat,
@@ -101,9 +100,7 @@ const reviews = [
 export default function VehicleDetail() {
   const { id } = useParams();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [selectedPricing, setSelectedPricing] = useState<"daily" | "weekly" | "monthly">("daily");
-  const [pickupDate, setPickupDate] = useState("");
-  const [returnDate, setReturnDate] = useState("");
+  
 
   const vehicle = vehicleData; // In real app, fetch by id
 
@@ -115,28 +112,7 @@ export default function VehicleDetail() {
     setCurrentImageIndex((prev) => (prev - 1 + vehicle.images.length) % vehicle.images.length);
   };
 
-  const calculateTotal = () => {
-    if (!pickupDate || !returnDate) return null;
-    const pickup = new Date(pickupDate);
-    const returnD = new Date(returnDate);
-    const diffDays = Math.ceil((returnD.getTime() - pickup.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (diffDays <= 0) return null;
-    
-    let basePrice = 0;
-    if (selectedPricing === "monthly" && diffDays >= 30) {
-      basePrice = Math.floor(diffDays / 30) * vehicle.price.monthly + (diffDays % 30) * vehicle.price.daily;
-    } else if (selectedPricing === "weekly" && diffDays >= 7) {
-      basePrice = Math.floor(diffDays / 7) * vehicle.price.weekly + (diffDays % 7) * vehicle.price.daily;
-    } else {
-      basePrice = diffDays * vehicle.price.daily;
-    }
-    
-    const tax = Math.round(basePrice * 0.18);
-    return { days: diffDays, base: basePrice, tax, total: basePrice + tax };
-  };
-
-  const pricing = calculateTotal();
+  
 
   return (
     <div className="min-h-screen bg-background">
@@ -344,90 +320,15 @@ export default function VehicleDetail() {
                 animate={{ opacity: 1, x: 0 }}
                 className="sticky top-24 bg-card rounded-2xl border border-border p-6 shadow-soft"
               >
-                {/* Pricing Options */}
-                <div className="mb-6">
-                  <h3 className="font-semibold text-foreground mb-4">Select Pricing</h3>
-                  <div className="grid grid-cols-3 gap-2">
-                    {(["daily", "weekly", "monthly"] as const).map((option) => (
-                      <button
-                        key={option}
-                        onClick={() => setSelectedPricing(option)}
-                        className={`p-3 rounded-xl text-center transition-all ${
-                          selectedPricing === option
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-secondary hover:bg-accent"
-                        }`}
-                      >
-                        <div className="text-lg font-bold">₹{vehicle.price[option]}</div>
-                        <div className="text-xs capitalize opacity-80">/{option.slice(0, -2) + "y"}</div>
-                      </button>
-                    ))}
+                {/* Daily Price */}
+                <div className="mb-6 text-center">
+                  <p className="text-sm text-muted-foreground mb-1">Starting at</p>
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-3xl font-bold text-foreground">₹{vehicle.price.daily}</span>
+                    <span className="text-muted-foreground">/day</span>
                   </div>
+                  <p className="text-xs text-muted-foreground mt-2">+ ₹{vehicle.securityDeposit} refundable deposit</p>
                 </div>
-
-                {/* Date Selection */}
-                <div className="space-y-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-2">
-                      Pickup Date
-                    </label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
-                      <input
-                        type="date"
-                        value={pickupDate}
-                        onChange={(e) => setPickupDate(e.target.value)}
-                        min={new Date().toISOString().split("T")[0]}
-                        className="w-full pl-10 pr-4 py-3 bg-secondary rounded-xl border border-border focus:border-primary focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-2">
-                      Return Date
-                    </label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
-                      <input
-                        type="date"
-                        value={returnDate}
-                        onChange={(e) => setReturnDate(e.target.value)}
-                        min={pickupDate || new Date().toISOString().split("T")[0]}
-                        className="w-full pl-10 pr-4 py-3 bg-secondary rounded-xl border border-border focus:border-primary focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Price Breakdown */}
-                {pricing && (
-                  <div className="mb-6 p-4 bg-secondary rounded-xl">
-                    <div className="flex justify-between mb-2">
-                      <span className="text-muted-foreground">
-                        ₹{vehicle.price[selectedPricing]} x {pricing.days} days
-                      </span>
-                      <span className="font-medium">₹{pricing.base}</span>
-                    </div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-muted-foreground">GST (18%)</span>
-                      <span className="font-medium">₹{pricing.tax}</span>
-                    </div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-muted-foreground">Security Deposit</span>
-                      <span className="font-medium">₹{vehicle.securityDeposit}</span>
-                    </div>
-                    <div className="h-px bg-border my-3" />
-                    <div className="flex justify-between">
-                      <span className="font-bold text-foreground">Total</span>
-                      <span className="font-bold text-primary text-lg">
-                        ₹{pricing.total + vehicle.securityDeposit}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      * Security deposit is refundable
-                    </p>
-                  </div>
-                )}
 
                 {/* Book Button */}
                 <Button variant="hero" size="xl" className="w-full mb-4" asChild>
