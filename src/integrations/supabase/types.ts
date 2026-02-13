@@ -205,40 +205,97 @@ export type Database = {
       }
       profiles: {
         Row: {
+          aadhar_back_url: string | null
+          aadhar_front_url: string | null
+          aadhar_number: string | null
+          address_line1: string | null
+          address_line2: string | null
+          city: string | null
           created_at: string
+          date_of_birth: string | null
+          documents_verified: boolean | null
+          driving_license_back_url: string | null
+          driving_license_expiry: string | null
+          driving_license_front_url: string | null
+          driving_license_number: string | null
           email: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
           full_name: string
+          gender: string | null
           id: string
           last_login: string | null
           phone: string | null
           phone_verified: boolean | null
+          postal_code: string | null
+          profile_completed: boolean | null
           profile_photo: string | null
+          state: string | null
           updated_at: string
           user_id: string
+          verification_status: string | null
         }
         Insert: {
+          aadhar_back_url?: string | null
+          aadhar_front_url?: string | null
+          aadhar_number?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
           created_at?: string
+          date_of_birth?: string | null
+          documents_verified?: boolean | null
+          driving_license_back_url?: string | null
+          driving_license_expiry?: string | null
+          driving_license_front_url?: string | null
+          driving_license_number?: string | null
           email: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           full_name: string
+          gender?: string | null
           id?: string
           last_login?: string | null
           phone?: string | null
           phone_verified?: boolean | null
+          postal_code?: string | null
+          profile_completed?: boolean | null
           profile_photo?: string | null
+          state?: string | null
           updated_at?: string
           user_id: string
+          verification_status?: string | null
         }
         Update: {
+          aadhar_back_url?: string | null
+          aadhar_front_url?: string | null
+          aadhar_number?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
           created_at?: string
+          date_of_birth?: string | null
+          documents_verified?: boolean | null
+          driving_license_back_url?: string | null
+          driving_license_expiry?: string | null
+          driving_license_front_url?: string | null
+          driving_license_number?: string | null
           email?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           full_name?: string
+          gender?: string | null
           id?: string
           last_login?: string | null
           phone?: string | null
           phone_verified?: boolean | null
+          postal_code?: string | null
+          profile_completed?: boolean | null
           profile_photo?: string | null
+          state?: string | null
           updated_at?: string
           user_id?: string
+          verification_status?: string | null
         }
         Relationships: []
       }
