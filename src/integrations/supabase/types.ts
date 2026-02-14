@@ -16,19 +16,27 @@ export type Database = {
     Tables: {
       bookings: {
         Row: {
+          actual_hours: number | null
           amount: number
+          base_rent: number | null
+          billed_days: number | null
           created_at: string
           customer_email: string | null
           customer_id: string | null
           customer_name: string | null
           customer_phone: string | null
+          delivery_address: string | null
+          delivery_charge: number | null
           duration: string | null
+          gateway_fee: number | null
           id: string
           notes: string | null
           partner_id: string
           payment_status: string | null
           pickup_location: string | null
           pickup_time: string
+          pickup_type: string | null
+          platform_fee: number | null
           return_time: string
           security_deposit: number | null
           status: string | null
@@ -36,19 +44,27 @@ export type Database = {
           vehicle_id: string
         }
         Insert: {
+          actual_hours?: number | null
           amount: number
+          base_rent?: number | null
+          billed_days?: number | null
           created_at?: string
           customer_email?: string | null
           customer_id?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          delivery_address?: string | null
+          delivery_charge?: number | null
           duration?: string | null
+          gateway_fee?: number | null
           id?: string
           notes?: string | null
           partner_id: string
           payment_status?: string | null
           pickup_location?: string | null
           pickup_time: string
+          pickup_type?: string | null
+          platform_fee?: number | null
           return_time: string
           security_deposit?: number | null
           status?: string | null
@@ -56,19 +72,27 @@ export type Database = {
           vehicle_id: string
         }
         Update: {
+          actual_hours?: number | null
           amount?: number
+          base_rent?: number | null
+          billed_days?: number | null
           created_at?: string
           customer_email?: string | null
           customer_id?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          delivery_address?: string | null
+          delivery_charge?: number | null
           duration?: string | null
+          gateway_fee?: number | null
           id?: string
           notes?: string | null
           partner_id?: string
           payment_status?: string | null
           pickup_location?: string | null
           pickup_time?: string
+          pickup_type?: string | null
+          platform_fee?: number | null
           return_time?: string
           security_deposit?: number | null
           status?: string | null

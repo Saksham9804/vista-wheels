@@ -23,6 +23,9 @@ import PartnerSignup from "./pages/auth/PartnerSignup";
 // Partner Dashboard
 import PartnerDashboard from "./pages/partner/PartnerDashboard";
 
+// Admin Dashboard
+import AdminDashboard from "./pages/admin/AdminDashboard";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -58,59 +61,32 @@ const App = () => (
             />
             
             {/* Protected Partner Routes */}
+            {[
+              "/partner/dashboard",
+              "/partner/dashboard/vehicles",
+              "/partner/dashboard/bookings",
+              "/partner/dashboard/earnings",
+              "/partner/dashboard/analytics",
+              "/partner/dashboard/settings",
+              "/partner/dashboard/support",
+            ].map((path) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <ProtectedRoute allowedRoles={["partner"]} redirectTo="/partner/login">
+                    <PartnerDashboard />
+                  </ProtectedRoute>
+                }
+              />
+            ))}
+
+            {/* Protected Admin Routes */}
             <Route
-              path="/partner/dashboard"
+              path="/admin/dashboard"
               element={
-                <ProtectedRoute allowedRoles={["partner"]} redirectTo="/partner/login">
-                  <PartnerDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/partner/dashboard/vehicles"
-              element={
-                <ProtectedRoute allowedRoles={["partner"]} redirectTo="/partner/login">
-                  <PartnerDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/partner/dashboard/bookings"
-              element={
-                <ProtectedRoute allowedRoles={["partner"]} redirectTo="/partner/login">
-                  <PartnerDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/partner/dashboard/earnings"
-              element={
-                <ProtectedRoute allowedRoles={["partner"]} redirectTo="/partner/login">
-                  <PartnerDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/partner/dashboard/analytics"
-              element={
-                <ProtectedRoute allowedRoles={["partner"]} redirectTo="/partner/login">
-                  <PartnerDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/partner/dashboard/settings"
-              element={
-                <ProtectedRoute allowedRoles={["partner"]} redirectTo="/partner/login">
-                  <PartnerDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/partner/dashboard/support"
-              element={
-                <ProtectedRoute allowedRoles={["partner"]} redirectTo="/partner/login">
-                  <PartnerDashboard />
+                <ProtectedRoute allowedRoles={["admin"]} redirectTo="/login">
+                  <AdminDashboard />
                 </ProtectedRoute>
               }
             />
