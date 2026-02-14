@@ -46,7 +46,7 @@ export function Benefits() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Why Choose <span className="text-primary">Vista</span>?
+            Why Choose <span className="text-primary">Get&Go</span>?
           </h2>
           <p className="text-primary-foreground/70 max-w-2xl mx-auto">
             We're committed to providing the best vehicle rental experience in India
