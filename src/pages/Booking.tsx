@@ -7,18 +7,10 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Check,
-  MapPin,
-  Calendar,
-  CreditCard,
-  FileCheck,
-  ChevronRight,
-  Shield,
-  ShieldCheck,
-  AlertTriangle,
-  Loader2,
-  ExternalLink,
+  Check, MapPin, Calendar, CreditCard, FileCheck, ChevronRight,
+  Shield, ShieldCheck, AlertTriangle, Loader2, ExternalLink, Info,
 } from "lucide-react";
+import { calculateRentalDays, calculatePriceBreakdown, formatDurationMessage } from "@/lib/pricing";
 
 const steps = [
   { id: 1, name: "Location & Dates", icon: MapPin },
@@ -28,10 +20,10 @@ const steps = [
 ];
 
 const pickupLocations = [
-  { id: 1, name: "Vista Hub - Connaught Place", address: "Block A, Connaught Place, New Delhi", timing: "8 AM - 10 PM" },
-  { id: 2, name: "Vista Hub - Nehru Place", address: "Nehru Place Metro Station, New Delhi", timing: "9 AM - 9 PM" },
-  { id: 3, name: "Vista Hub - IGI Airport T3", address: "Terminal 3, IGI Airport, New Delhi", timing: "24 Hours" },
-  { id: 4, name: "Doorstep Delivery", address: "We'll deliver to your location", timing: "Available for ₹200 extra" },
+  { id: 1, name: "Vista Hub - Connaught Place", address: "Block A, Connaught Place, New Delhi", timing: "8 AM - 10 PM", type: "center" },
+  { id: 2, name: "Vista Hub - Nehru Place", address: "Nehru Place Metro Station, New Delhi", timing: "9 AM - 9 PM", type: "center" },
+  { id: 3, name: "Vista Hub - IGI Airport T3", address: "Terminal 3, IGI Airport, New Delhi", timing: "24 Hours", type: "center" },
+  { id: 4, name: "Doorstep Delivery", address: "We'll deliver to your location", timing: "+ ₹150", type: "doorstep" },
 ];
 
 const vehicle = {
@@ -60,12 +52,13 @@ interface ProfileData {
 
 export default function Booking() {
   const { id } = useParams();
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [formData, setFormData] = useState({
     pickupLocation: "",
+    pickupType: "center",
     pickupDate: "",
     pickupTime: "10:00",
     returnDate: "",
@@ -75,9 +68,7 @@ export default function Booking() {
   });
 
   useEffect(() => {
-    if (user) {
-      fetchProfileData();
-    }
+    if (user) fetchProfileData();
   }, [user]);
 
   const fetchProfileData = async () => {
@@ -100,46 +91,38 @@ export default function Booking() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const calculateDays = () => {
-    if (formData.pickupDate && formData.returnDate) {
-      const pickup = new Date(formData.pickupDate);
-      const returnD = new Date(formData.returnDate);
-      const days = Math.ceil((returnD.getTime() - pickup.getTime()) / (1000 * 60 * 60 * 24));
-      return days > 0 ? days : 0;
-    }
-    return 0;
+  const handleLocationSelect = (location: typeof pickupLocations[0]) => {
+    setFormData((prev) => ({
+      ...prev,
+      pickupLocation: location.name,
+      pickupType: location.type,
+    }));
   };
 
-  const days = calculateDays();
-  const basePrice = days * vehicle.price;
-  const tax = Math.round(basePrice * 0.18);
-  const total = basePrice + tax + vehicle.securityDeposit;
+  // Pricing calculations
+  const { hours, days: billedDays } = calculateRentalDays(
+    formData.pickupDate, formData.pickupTime, formData.returnDate, formData.returnTime
+  );
+  const isDoorstep = formData.pickupType === "doorstep";
+  const pricing = calculatePriceBreakdown(vehicle.price, billedDays, vehicle.securityDeposit, isDoorstep);
+  const durationMessage = formatDurationMessage(hours, billedDays);
 
   const isVerified = profileData?.documents_verified === true;
   const isProfileComplete = profileData?.profile_completed === true;
   const isLicenseExpired = profileData?.driving_license_expiry
     ? new Date(profileData.driving_license_expiry) < new Date()
     : false;
-
   const canBook = isVerified && isProfileComplete && !isLicenseExpired;
 
-  const nextStep = () => {
-    if (currentStep < steps.length) setCurrentStep(currentStep + 1);
-  };
-  const prevStep = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1);
-  };
+  const nextStep = () => { if (currentStep < steps.length) setCurrentStep(currentStep + 1); };
+  const prevStep = () => { if (currentStep > 1) setCurrentStep(currentStep - 1); };
 
   const isStepValid = () => {
     switch (currentStep) {
-      case 1:
-        return formData.pickupLocation !== "" && formData.pickupDate !== "" && formData.returnDate !== "" && days > 0;
-      case 2:
-        return formData.agreedToTerms && canBook;
-      case 3:
-        return true;
-      default:
-        return true;
+      case 1: return formData.pickupLocation !== "" && formData.pickupDate !== "" && formData.returnDate !== "" && billedDays > 0;
+      case 2: return formData.agreedToTerms && canBook;
+      case 3: return true;
+      default: return true;
     }
   };
 
@@ -191,7 +174,7 @@ export default function Booking() {
                       {pickupLocations.map((location) => (
                         <button
                           key={location.id}
-                          onClick={() => handleInputChange("pickupLocation", location.name)}
+                          onClick={() => handleLocationSelect(location)}
                           className={`w-full text-left p-5 rounded-xl border-2 transition-all ${
                             formData.pickupLocation === location.name ? "border-primary bg-accent" : "border-border hover:border-primary/50"
                           }`}
@@ -240,11 +223,15 @@ export default function Booking() {
                       </div>
                     </div>
 
-                    {days > 0 && (
-                      <div className="mt-6 p-4 bg-accent rounded-xl">
+                    {billedDays > 0 && (
+                      <div className="mt-6 p-4 bg-accent rounded-xl space-y-1">
                         <p className="text-center">
-                          <span className="text-muted-foreground">Total rental duration: </span>
-                          <span className="font-bold text-primary text-lg">{days} day{days > 1 ? "s" : ""}</span>
+                          <span className="text-muted-foreground">Rental: </span>
+                          <span className="font-bold text-primary text-lg">{billedDays} day{billedDays > 1 ? "s" : ""}</span>
+                        </p>
+                        <p className="text-center text-sm text-muted-foreground flex items-center justify-center gap-1">
+                          <Info className="w-3 h-3" />
+                          {durationMessage}
                         </p>
                       </div>
                     )}
@@ -257,7 +244,6 @@ export default function Booking() {
                     <h2 className="text-2xl font-bold text-foreground mb-2">Review & Terms</h2>
                     <p className="text-muted-foreground mb-6">Your details from your profile will be used for this booking</p>
 
-                    {/* Verification Status */}
                     {!canBook && (
                       <div className="mb-6 p-4 bg-destructive/10 border border-destructive/30 rounded-xl">
                         <div className="flex items-start gap-3">
@@ -274,7 +260,6 @@ export default function Booking() {
                       </div>
                     )}
 
-                    {/* Profile Details auto-loaded */}
                     {profileData && (
                       <div className="space-y-4">
                         <div className="flex items-center justify-between mb-2">
@@ -290,26 +275,11 @@ export default function Booking() {
 
                         <div className="bg-secondary rounded-xl p-5 space-y-3 text-sm">
                           <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <span className="text-muted-foreground">Name</span>
-                              <p className="font-medium text-foreground">{profileData.full_name}</p>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Phone</span>
-                              <p className="font-medium text-foreground">{profileData.phone || "Not provided"}</p>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Email</span>
-                              <p className="font-medium text-foreground">{profileData.email}</p>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Address</span>
-                              <p className="font-medium text-foreground">{profileData.address_line1 || "Not provided"}{profileData.city ? `, ${profileData.city}` : ""}</p>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Driving License</span>
-                              <p className="font-medium text-foreground">{profileData.driving_license_number || "Not provided"}</p>
-                            </div>
+                            <div><span className="text-muted-foreground">Name</span><p className="font-medium text-foreground">{profileData.full_name}</p></div>
+                            <div><span className="text-muted-foreground">Phone</span><p className="font-medium text-foreground">{profileData.phone || "Not provided"}</p></div>
+                            <div><span className="text-muted-foreground">Email</span><p className="font-medium text-foreground">{profileData.email}</p></div>
+                            <div><span className="text-muted-foreground">Address</span><p className="font-medium text-foreground">{profileData.address_line1 || "Not provided"}{profileData.city ? `, ${profileData.city}` : ""}</p></div>
+                            <div><span className="text-muted-foreground">Driving License</span><p className="font-medium text-foreground">{profileData.driving_license_number || "Not provided"}</p></div>
                             <div>
                               <span className="text-muted-foreground">License Expiry</span>
                               <p className={`font-medium ${isLicenseExpired ? "text-destructive" : "text-foreground"}`}>
@@ -317,39 +287,27 @@ export default function Booking() {
                                 {isLicenseExpired && " (Expired)"}
                               </p>
                             </div>
-                            <div>
-                              <span className="text-muted-foreground">Emergency Contact</span>
-                              <p className="font-medium text-foreground">{profileData.emergency_contact_name || "Not provided"}</p>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Emergency Phone</span>
-                              <p className="font-medium text-foreground">{profileData.emergency_contact_phone || "Not provided"}</p>
-                            </div>
+                            <div><span className="text-muted-foreground">Emergency Contact</span><p className="font-medium text-foreground">{profileData.emergency_contact_name || "Not provided"}</p></div>
+                            <div><span className="text-muted-foreground">Emergency Phone</span><p className="font-medium text-foreground">{profileData.emergency_contact_phone || "Not provided"}</p></div>
                           </div>
                         </div>
 
-                        {/* Terms */}
                         <div className="mt-6 space-y-4">
                           <h3 className="font-semibold text-foreground">Terms & Conditions</h3>
                           <div className="bg-secondary rounded-xl p-4 text-sm text-muted-foreground space-y-2 max-h-40 overflow-y-auto">
                             <p>• Valid driving license required at the time of pickup.</p>
-                            <p>• Minimum age: 18 years.</p>
+                            <p>• Minimum rental charge: 1 full day (24 hours).</p>
+                            <p>• Platform fee of 10% applies on base rent.</p>
+                            <p>• Payment processing fee of 2.5% applies.</p>
+                            <p>• Doorstep delivery available for ₹150 extra.</p>
                             <p>• Original ID proof required at pickup.</p>
                             <p>• No inter-state travel without prior approval.</p>
-                            <p>• The vehicle must be returned in the same condition.</p>
-                            <p>• Any damage or traffic violations are the renter's responsibility.</p>
                             <p>• Cancellation is free up to 24 hours before pickup.</p>
-                            <p>• Security deposit of ₹{vehicle.securityDeposit} will be refunded within 24-48 hours after returning the vehicle in good condition.</p>
+                            <p>• Security deposit of ₹{vehicle.securityDeposit.toLocaleString()} will be refunded within 24-48 hours after return.</p>
                           </div>
 
                           <div className="flex items-start gap-3">
-                            <input
-                              type="checkbox"
-                              id="terms"
-                              checked={formData.agreedToTerms}
-                              onChange={(e) => handleInputChange("agreedToTerms", e.target.checked)}
-                              className="mt-1"
-                            />
+                            <input type="checkbox" id="terms" checked={formData.agreedToTerms} onChange={(e) => handleInputChange("agreedToTerms", e.target.checked)} className="mt-1" />
                             <label htmlFor="terms" className="text-sm text-muted-foreground">
                               I agree to the <Link to="/terms" className="text-primary hover:underline">Terms & Conditions</Link> and <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>. I confirm that my profile details are correct.
                             </label>
@@ -430,7 +388,7 @@ export default function Booking() {
               </motion.div>
             </div>
 
-            {/* Sidebar */}
+            {/* Sidebar - Price Breakdown */}
             <div className="lg:col-span-1">
               <div className="sticky top-24 bg-card rounded-2xl border border-border p-6">
                 <h3 className="font-bold text-foreground mb-4">Booking Summary</h3>
@@ -445,37 +403,48 @@ export default function Booking() {
 
                 {formData.pickupLocation && (
                   <div className="py-4 border-b border-border">
-                    <p className="text-sm text-muted-foreground mb-1">Pickup Location</p>
+                    <p className="text-sm text-muted-foreground mb-1">Pickup</p>
                     <p className="font-medium text-foreground">{formData.pickupLocation}</p>
+                    {isDoorstep && <p className="text-xs text-primary mt-1">+ ₹150 delivery charge</p>}
                   </div>
                 )}
 
-                {days > 0 && (
+                {billedDays > 0 && (
                   <div className="py-4 border-b border-border">
                     <p className="text-sm text-muted-foreground mb-1">Duration</p>
                     <p className="font-medium text-foreground">{formData.pickupDate} to {formData.returnDate}</p>
-                    <p className="text-sm text-primary">{days} day{days > 1 ? "s" : ""}</p>
+                    <p className="text-sm text-primary">{billedDays} day{billedDays > 1 ? "s" : ""}</p>
                   </div>
                 )}
 
-                {days > 0 && (
-                  <div className="pt-4">
-                    <div className="flex justify-between mb-2">
-                      <span className="text-muted-foreground">₹{vehicle.price} x {days} days</span>
-                      <span className="font-medium">₹{basePrice}</span>
+                {billedDays > 0 && (
+                  <div className="pt-4 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Vehicle Rent ({billedDays} day{billedDays > 1 ? "s" : ""} @ ₹{vehicle.price}/day)</span>
+                      <span className="font-medium">₹{pricing.baseRent.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-muted-foreground">GST (18%)</span>
-                      <span className="font-medium">₹{tax}</span>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Platform Fee (10%)</span>
+                      <span className="font-medium">₹{pricing.platformFee.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between mb-4">
-                      <span className="text-muted-foreground">Security Deposit</span>
-                      <span className="font-medium">₹{vehicle.securityDeposit}</span>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Payment Processing (2.5%)</span>
+                      <span className="font-medium">₹{pricing.gatewayFee.toLocaleString()}</span>
                     </div>
+                    {isDoorstep && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Doorstep Delivery</span>
+                        <span className="font-medium">₹{pricing.deliveryCharge}</span>
+                      </div>
+                    )}
                     <div className="h-px bg-border my-3" />
                     <div className="flex justify-between">
-                      <span className="font-bold text-foreground">Total</span>
-                      <span className="font-bold text-primary text-xl">₹{total}</span>
+                      <span className="font-bold text-foreground">Total Payable</span>
+                      <span className="font-bold text-primary text-xl">₹{pricing.totalPayable.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-sm mt-2">
+                      <span className="text-muted-foreground">Security Deposit (refundable)</span>
+                      <span className="font-medium">₹{vehicle.securityDeposit.toLocaleString()}</span>
                     </div>
                   </div>
                 )}
