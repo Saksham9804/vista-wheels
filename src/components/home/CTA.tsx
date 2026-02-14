@@ -23,7 +23,7 @@ export function CTA() {
             Ready to Hit the Road?
           </h2>
           <p className="text-xl text-primary-foreground/80 mb-10">
-            Book your perfect ride today and experience the freedom of the open road with Vista.
+            Book your perfect ride today and experience the freedom of the open road with Get&Go.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

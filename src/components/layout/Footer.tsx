@@ -41,12 +41,12 @@ export function Footer() {
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-6">
               <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-xl">V</span>
+              <span className="text-primary-foreground font-bold text-xl">G</span>
               </div>
-              <span className="text-2xl font-bold">Vista</span>
+              <span className="text-2xl font-bold">Get&Go</span>
             </Link>
             <p className="text-primary-foreground/70 mb-6 max-w-sm">
-              India's largest vehicle rental platform. Rent bikes, scooters, and cars at the lowest prices with 24/7 customer support.
+              Get&Go — India's largest vehicle rental platform. Rent bikes, scooters, and cars at the lowest prices with 24/7 customer support.
             </p>
             <div className="flex gap-4">
               {socialLinks.map((social, index) => (
@@ -136,7 +136,7 @@ export function Footer() {
         {/* Copyright */}
         <div className="mt-8 pt-8 border-t border-primary-foreground/10 text-center">
           <p className="text-primary-foreground/50 text-sm">
-            © {new Date().getFullYear()} Vista Vehicle Rentals. All rights reserved.
+            © {new Date().getFullYear()} Get&Go Vehicle Rentals. All rights reserved.
           </p>
         </div>
       </div>

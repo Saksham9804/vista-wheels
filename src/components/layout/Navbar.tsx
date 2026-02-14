@@ -50,9 +50,9 @@ export function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-orange">
-              <span className="text-primary-foreground font-bold text-xl">V</span>
+              <span className="text-primary-foreground font-bold text-xl">G</span>
             </div>
-            <span className="text-2xl font-bold text-foreground">Vista</span>
+            <span className="text-2xl font-bold text-foreground">Get&Go</span>
           </Link>
 
           {/* Desktop Navigation */}
