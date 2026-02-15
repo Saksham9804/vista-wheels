@@ -19,7 +19,9 @@ import {
   Zap,
   MapPin,
   Loader2,
+  Search,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 interface VehicleData {
   id: string;
@@ -73,6 +75,7 @@ export default function Vehicles() {
   const [selectedType, setSelectedType] = useState(searchParams.get("type") || "all");
   const [selectedPrice, setSelectedPrice] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch vehicles from database
   useEffect(() => {
@@ -109,6 +112,12 @@ export default function Vehicles() {
   const filteredVehicles = useMemo(() => {
     let result = [...vehicles];
 
+    if (searchQuery.trim()) {
+      result = result.filter((v) =>
+        v.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
     if (selectedType !== "all") {
       result = result.filter((v) => v.vehicle_type === selectedType);
     }
@@ -132,7 +141,7 @@ export default function Vehicles() {
     }
 
     return result;
-  }, [vehicles, selectedCity, selectedType, selectedPrice, sortBy]);
+  }, [vehicles, selectedCity, selectedType, selectedPrice, sortBy, searchQuery]);
 
   const activeFiltersCount = [
     selectedCity !== "All Cities",
@@ -151,9 +160,18 @@ export default function Vehicles() {
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
               Find Your Perfect Ride
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground mb-4">
               {loading ? "Loading..." : `${filteredVehicles.length} vehicles available`}
             </p>
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search vehicles by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
         </section>
 
