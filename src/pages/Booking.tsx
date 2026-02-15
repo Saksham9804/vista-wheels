@@ -4,11 +4,13 @@ import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Check, MapPin, Calendar, CreditCard, FileCheck, ChevronRight,
   Shield, ShieldCheck, AlertTriangle, Loader2, ExternalLink, Info,
+  Navigation, Truck,
 } from "lucide-react";
 import { calculateRentalDays, calculatePriceBreakdown, formatDurationMessage } from "@/lib/pricing";
 
@@ -19,20 +21,26 @@ const steps = [
   { id: 4, name: "Confirm", icon: Check },
 ];
 
-const pickupLocations = [
-  { id: 1, name: "Vista Hub - Connaught Place", address: "Block A, Connaught Place, New Delhi", timing: "8 AM - 10 PM", type: "center" },
-  { id: 2, name: "Vista Hub - Nehru Place", address: "Nehru Place Metro Station, New Delhi", timing: "9 AM - 9 PM", type: "center" },
-  { id: 3, name: "Vista Hub - IGI Airport T3", address: "Terminal 3, IGI Airport, New Delhi", timing: "24 Hours", type: "center" },
-  { id: 4, name: "Doorstep Delivery", address: "We'll deliver to your location", timing: "+ ₹150", type: "doorstep" },
-];
+interface NearbyPartner {
+  id: string;
+  business_name: string;
+  shop_address: string | null;
+  city: string;
+  latitude: number;
+  longitude: number;
+  distance: number; // in km
+}
 
-const vehicle = {
-  id: 1,
-  name: "Royal Enfield Classic 350",
-  image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400&q=80",
-  price: 899,
-  securityDeposit: 3000,
-};
+interface VehicleInfo {
+  id: string;
+  name: string;
+  brand: string;
+  vehicle_type: string;
+  photos: string[] | null;
+  price_per_day: number;
+  security_deposit: number | null;
+  partner_id: string;
+}
 
 interface ProfileData {
   full_name: string;
@@ -50,14 +58,34 @@ interface ProfileData {
   profile_completed: boolean | null;
 }
 
+function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 export default function Booking() {
   const { id } = useParams();
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [vehicle, setVehicle] = useState<VehicleInfo | null>(null);
+  const [loadingVehicle, setLoadingVehicle] = useState(true);
+  const [nearbyPartners, setNearbyPartners] = useState<NearbyPartner[]>([]);
+  const [loadingPartners, setLoadingPartners] = useState(true);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [doorstepAvailable, setDoorstepAvailable] = useState(false);
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+
   const [formData, setFormData] = useState({
     pickupLocation: "",
+    pickupPartnerId: "",
     pickupType: "center",
     pickupDate: "",
     pickupTime: "10:00",
@@ -66,6 +94,76 @@ export default function Booking() {
     paymentMethod: "upi",
     agreedToTerms: false,
   });
+
+  // Get user location
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => setUserLocation({ lat: 28.6139, lng: 77.209 }) // Default Delhi
+      );
+    } else {
+      setUserLocation({ lat: 28.6139, lng: 77.209 });
+    }
+  }, []);
+
+  // Fetch vehicle data
+  useEffect(() => {
+    if (!id) return;
+    const fetchVehicle = async () => {
+      const { data, error } = await supabase
+        .from("vehicles")
+        .select("id, name, brand, vehicle_type, photos, price_per_day, security_deposit, partner_id")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (!error && data) {
+        setVehicle(data as VehicleInfo);
+      }
+      setLoadingVehicle(false);
+    };
+    fetchVehicle();
+  }, [id]);
+
+  // Fetch nearest partners within 50km
+  useEffect(() => {
+    if (!userLocation) return;
+    const fetchNearbyPartners = async () => {
+      const { data: partners, error } = await supabase
+        .from("partners")
+        .select("id, business_name, shop_address, city, latitude, longitude, status")
+        .eq("status", "approved");
+
+      if (error || !partners) {
+        setLoadingPartners(false);
+        return;
+      }
+
+      const nearby = partners
+        .filter((p) => p.latitude && p.longitude)
+        .map((p) => ({
+          id: p.id,
+          business_name: p.business_name,
+          shop_address: p.shop_address,
+          city: p.city,
+          latitude: p.latitude!,
+          longitude: p.longitude!,
+          distance: haversineDistance(userLocation.lat, userLocation.lng, p.latitude!, p.longitude!),
+        }))
+        .filter((p) => p.distance <= 50)
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, 3);
+
+      setNearbyPartners(nearby);
+
+      // Doorstep delivery available if any partner is within 15km
+      const hasClosePartner = nearby.some((p) => p.distance <= 15);
+      setDoorstepAvailable(hasClosePartner);
+
+      setLoadingPartners(false);
+    };
+    fetchNearbyPartners();
+  }, [userLocation]);
 
   useEffect(() => {
     if (user) fetchProfileData();
@@ -91,20 +189,34 @@ export default function Booking() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleLocationSelect = (location: typeof pickupLocations[0]) => {
+  const handlePartnerSelect = (partner: NearbyPartner) => {
     setFormData((prev) => ({
       ...prev,
-      pickupLocation: location.name,
-      pickupType: location.type,
+      pickupLocation: `${partner.business_name} — ${partner.shop_address || partner.city}`,
+      pickupPartnerId: partner.id,
+      pickupType: "center",
     }));
   };
 
-  // Pricing calculations
+  const handleDoorstepSelect = () => {
+    // Use the closest partner for doorstep delivery
+    const closest = nearbyPartners[0];
+    setFormData((prev) => ({
+      ...prev,
+      pickupLocation: "Doorstep Delivery",
+      pickupPartnerId: closest?.id || "",
+      pickupType: "doorstep",
+    }));
+  };
+
+  const pricePerDay = vehicle?.price_per_day || 0;
+  const securityDeposit = vehicle?.security_deposit || 0;
+
   const { hours, days: billedDays } = calculateRentalDays(
     formData.pickupDate, formData.pickupTime, formData.returnDate, formData.returnTime
   );
   const isDoorstep = formData.pickupType === "doorstep";
-  const pricing = calculatePriceBreakdown(vehicle.price, billedDays, vehicle.securityDeposit, isDoorstep);
+  const pricing = calculatePriceBreakdown(pricePerDay, billedDays, securityDeposit, isDoorstep);
   const durationMessage = formatDurationMessage(hours, billedDays);
 
   const isVerified = profileData?.documents_verified === true;
@@ -119,20 +231,42 @@ export default function Booking() {
 
   const isStepValid = () => {
     switch (currentStep) {
-      case 1: return formData.pickupLocation !== "" && formData.pickupDate !== "" && formData.returnDate !== "" && billedDays > 0;
+      case 1:
+        if (formData.pickupType === "doorstep" && !deliveryAddress.trim()) return false;
+        return formData.pickupLocation !== "" && formData.pickupDate !== "" && formData.returnDate !== "" && billedDays > 0;
       case 2: return formData.agreedToTerms && canBook;
       case 3: return true;
       default: return true;
     }
   };
 
-  if (loadingProfile) {
+  const isLoading = loadingProfile || loadingVehicle;
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
+
+  if (!vehicle) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-20 lg:pt-24">
+          <div className="container mx-auto px-4 py-20 text-center">
+            <h2 className="text-2xl font-bold text-foreground mb-4">Vehicle not found</h2>
+            <p className="text-muted-foreground mb-6">The vehicle you're looking for doesn't exist or is no longer available.</p>
+            <Button asChild><Link to="/vehicles">Browse Vehicles</Link></Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const vehicleImage = vehicle.photos?.[0] || "/placeholder.svg";
 
   return (
     <div className="min-h-screen bg-background">
@@ -168,32 +302,109 @@ export default function Booking() {
                 {currentStep === 1 && (
                   <div>
                     <h2 className="text-2xl font-bold text-foreground mb-2">Select Pickup Location & Dates</h2>
-                    <p className="text-muted-foreground mb-6">Choose where and when you'd like your vehicle</p>
+                    <p className="text-muted-foreground mb-6">Choose a nearby partner center or opt for doorstep delivery</p>
 
-                    <div className="space-y-4 mb-8">
-                      {pickupLocations.map((location) => (
+                    {loadingPartners ? (
+                      <div className="flex items-center justify-center py-10">
+                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                        <span className="ml-2 text-muted-foreground">Finding nearby partners...</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-4 mb-8">
+                        {nearbyPartners.length === 0 && (
+                          <div className="p-5 rounded-xl border-2 border-border bg-secondary/50 text-center">
+                            <MapPin className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                            <p className="text-muted-foreground">No partner centers found within 50 km of your location.</p>
+                          </div>
+                        )}
+
+                        {nearbyPartners.map((partner) => (
+                          <button
+                            key={partner.id}
+                            onClick={() => handlePartnerSelect(partner)}
+                            className={`w-full text-left p-5 rounded-xl border-2 transition-all ${
+                              formData.pickupPartnerId === partner.id && formData.pickupType === "center"
+                                ? "border-primary bg-accent"
+                                : "border-border hover:border-primary/50"
+                            }`}
+                          >
+                            <div className="flex items-start gap-4">
+                              <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
+                                formData.pickupPartnerId === partner.id && formData.pickupType === "center"
+                                  ? "border-primary bg-primary"
+                                  : "border-muted-foreground"
+                              }`}>
+                                {formData.pickupPartnerId === partner.id && formData.pickupType === "center" && (
+                                  <Check className="w-3 h-3 text-primary-foreground" />
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                  <h3 className="font-semibold text-foreground">{partner.business_name}</h3>
+                                  <span className="text-sm font-medium text-primary flex items-center gap-1">
+                                    <Navigation className="w-3 h-3" />
+                                    {partner.distance.toFixed(1)} km
+                                  </span>
+                                </div>
+                                <p className="text-sm text-muted-foreground mt-1">{partner.shop_address || partner.city}</p>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+
+                        {/* Doorstep Delivery Option */}
                         <button
-                          key={location.id}
-                          onClick={() => handleLocationSelect(location)}
+                          onClick={doorstepAvailable ? handleDoorstepSelect : undefined}
+                          disabled={!doorstepAvailable}
                           className={`w-full text-left p-5 rounded-xl border-2 transition-all ${
-                            formData.pickupLocation === location.name ? "border-primary bg-accent" : "border-border hover:border-primary/50"
+                            formData.pickupType === "doorstep"
+                              ? "border-primary bg-accent"
+                              : doorstepAvailable
+                                ? "border-border hover:border-primary/50"
+                                : "border-border opacity-50 cursor-not-allowed"
                           }`}
                         >
                           <div className="flex items-start gap-4">
                             <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
-                              formData.pickupLocation === location.name ? "border-primary bg-primary" : "border-muted-foreground"
+                              formData.pickupType === "doorstep"
+                                ? "border-primary bg-primary"
+                                : "border-muted-foreground"
                             }`}>
-                              {formData.pickupLocation === location.name && <Check className="w-3 h-3 text-primary-foreground" />}
+                              {formData.pickupType === "doorstep" && (
+                                <Check className="w-3 h-3 text-primary-foreground" />
+                              )}
                             </div>
                             <div className="flex-1">
-                              <h3 className="font-semibold text-foreground">{location.name}</h3>
-                              <p className="text-sm text-muted-foreground mt-1">{location.address}</p>
-                              <p className="text-sm text-primary mt-1">{location.timing}</p>
+                              <div className="flex items-center justify-between">
+                                <h3 className="font-semibold text-foreground flex items-center gap-2">
+                                  <Truck className="w-4 h-4" />
+                                  Doorstep Delivery
+                                </h3>
+                                <span className="text-sm font-semibold text-primary">+ ₹150</span>
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {doorstepAvailable
+                                  ? "We'll deliver to your location within ~2 hours (available within 15 km)"
+                                  : "Not available — no partner center within 15 km of your location"}
+                              </p>
                             </div>
                           </div>
                         </button>
-                      ))}
-                    </div>
+
+                        {/* Delivery address input when doorstep selected */}
+                        {formData.pickupType === "doorstep" && (
+                          <div className="ml-9">
+                            <label className="block text-sm font-medium text-foreground mb-2">Delivery Address</label>
+                            <Input
+                              placeholder="Enter your full delivery address"
+                              value={deliveryAddress}
+                              onChange={(e) => setDeliveryAddress(e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">Estimated delivery: ~2 hours from booking confirmation</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     <h3 className="font-semibold text-foreground mb-4">Select Dates & Time</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -215,7 +426,7 @@ export default function Booking() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">Return Time</label>
-                        <select value={formData.returnTime} onChange={(e) => handleInputChange("returnTime", e.target.value)} className="w-full px-4 py-3 bg-secondary rounded-xl border border-border focus:border-primary focus:outline-none">
+                        <select value={formData.returnTime} onChange={(e) => handleInputChange("returnTime", e.target.value)} className="w-full px-4 py-3 bg-secondary rounded-xl border border-border focus:outline-none">
                           {Array.from({ length: 24 }, (_, i) => (
                             <option key={i} value={`${i.toString().padStart(2, "0")}:00`}>{`${i.toString().padStart(2, "0")}:00`}</option>
                           ))}
@@ -299,11 +510,11 @@ export default function Booking() {
                             <p>• Minimum rental charge: 1 full day (24 hours).</p>
                             <p>• Platform fee of 10% applies on base rent.</p>
                             <p>• Payment processing fee of 2.5% applies.</p>
-                            <p>• Doorstep delivery available for ₹150 extra.</p>
+                            <p>• Doorstep delivery available for ₹150 extra (within 15 km radius).</p>
                             <p>• Original ID proof required at pickup.</p>
                             <p>• No inter-state travel without prior approval.</p>
                             <p>• Cancellation is free up to 24 hours before pickup.</p>
-                            <p>• Security deposit of ₹{vehicle.securityDeposit.toLocaleString()} will be refunded within 24-48 hours after return.</p>
+                            <p>• Security deposit of ₹{securityDeposit.toLocaleString()} will be refunded within 24-48 hours after return.</p>
                           </div>
 
                           <div className="flex items-start gap-3">
@@ -394,10 +605,10 @@ export default function Booking() {
                 <h3 className="font-bold text-foreground mb-4">Booking Summary</h3>
 
                 <div className="flex gap-4 pb-4 border-b border-border">
-                  <img src={vehicle.image} alt={vehicle.name} className="w-24 h-20 rounded-xl object-cover" />
+                  <img src={vehicleImage} alt={vehicle.name} className="w-24 h-20 rounded-xl object-cover" />
                   <div>
                     <h4 className="font-semibold text-foreground">{vehicle.name}</h4>
-                    <p className="text-sm text-muted-foreground">₹{vehicle.price}/day</p>
+                    <p className="text-sm text-muted-foreground">₹{pricePerDay}/day</p>
                   </div>
                 </div>
 
@@ -406,6 +617,9 @@ export default function Booking() {
                     <p className="text-sm text-muted-foreground mb-1">Pickup</p>
                     <p className="font-medium text-foreground">{formData.pickupLocation}</p>
                     {isDoorstep && <p className="text-xs text-primary mt-1">+ ₹150 delivery charge</p>}
+                    {isDoorstep && deliveryAddress && (
+                      <p className="text-xs text-muted-foreground mt-1">📍 {deliveryAddress}</p>
+                    )}
                   </div>
                 )}
 
@@ -420,7 +634,7 @@ export default function Booking() {
                 {billedDays > 0 && (
                   <div className="pt-4 space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Vehicle Rent ({billedDays} day{billedDays > 1 ? "s" : ""} @ ₹{vehicle.price}/day)</span>
+                      <span className="text-muted-foreground">Vehicle Rent ({billedDays} day{billedDays > 1 ? "s" : ""} @ ₹{pricePerDay}/day)</span>
                       <span className="font-medium">₹{pricing.baseRent.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-sm">
@@ -444,7 +658,7 @@ export default function Booking() {
                     </div>
                     <div className="flex justify-between text-sm mt-2">
                       <span className="text-muted-foreground">Security Deposit (refundable)</span>
-                      <span className="font-medium">₹{vehicle.securityDeposit.toLocaleString()}</span>
+                      <span className="font-medium">₹{securityDeposit.toLocaleString()}</span>
                     </div>
                   </div>
                 )}
