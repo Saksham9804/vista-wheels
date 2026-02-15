@@ -3,75 +3,6 @@ import { Link } from "react-router-dom";
 import { Fuel, Gauge, Star, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const vehicles = [
-  {
-    id: 1,
-    name: "Royal Enfield Classic 350",
-    type: "Bike",
-    image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=600&q=80",
-    price: 899,
-    rating: 4.8,
-    reviews: 156,
-    specs: { engine: "350cc", mileage: "35 kmpl" },
-    popular: true,
-  },
-  {
-    id: 2,
-    name: "Honda Activa 6G",
-    type: "Scooty",
-    image: "https://images.unsplash.com/photo-1622185135505-2d795003f628?w=600&q=80",
-    price: 499,
-    rating: 4.9,
-    reviews: 243,
-    specs: { engine: "110cc", mileage: "50 kmpl" },
-    popular: true,
-  },
-  {
-    id: 3,
-    name: "Maruti Swift",
-    type: "Car",
-    image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=600&q=80",
-    price: 1499,
-    rating: 4.7,
-    reviews: 89,
-    specs: { engine: "1.2L", mileage: "22 kmpl" },
-    popular: false,
-  },
-  {
-    id: 4,
-    name: "KTM Duke 200",
-    type: "Bike",
-    image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=600&q=80",
-    price: 1199,
-    rating: 4.9,
-    reviews: 112,
-    specs: { engine: "200cc", mileage: "30 kmpl" },
-    popular: true,
-  },
-  {
-    id: 5,
-    name: "Ather 450X",
-    type: "Scooty",
-    image: "https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=600&q=80",
-    price: 699,
-    rating: 4.8,
-    reviews: 78,
-    specs: { engine: "Electric", mileage: "85 km range" },
-    popular: false,
-  },
-  {
-    id: 6,
-    name: "Hyundai i20",
-    type: "Car",
-    image: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=600&q=80",
-    price: 1799,
-    rating: 4.6,
-    reviews: 67,
-    specs: { engine: "1.2L", mileage: "20 kmpl" },
-    popular: false,
-  },
-];
-
 export function VehicleShowcase() {
   return (
     <section className="py-20 bg-background">
@@ -79,12 +10,8 @@ export function VehicleShowcase() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-              Popular Vehicles
-            </h2>
-            <p className="text-muted-foreground">
-              Choose from our most-booked rides
-            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Popular Vehicles</h2>
+            <p className="text-muted-foreground">Choose from our most-booked rides</p>
           </div>
           <Button variant="outline" asChild>
             <Link to="/vehicles" className="flex items-center gap-2">
@@ -138,7 +65,7 @@ export function VehicleShowcase() {
                   <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
                     {vehicle.name}
                   </h3>
-                  
+
                   {/* Specs */}
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
                     <span className="flex items-center gap-1">
