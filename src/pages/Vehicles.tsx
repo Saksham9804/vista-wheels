@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, lazy, Suspense } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
@@ -20,8 +20,11 @@ import {
   MapPin,
   Loader2,
   Search,
+  Map,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+
+const VendorMap = lazy(() => import("@/components/maps/VendorMap"));
 
 interface VehicleData {
   id: string;
@@ -66,7 +69,7 @@ const sortOptions = [
 export default function Vehicles() {
   const [searchParams] = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list" | "map">("grid");
   const [vehicles, setVehicles] = useState<VehicleData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -267,6 +270,7 @@ export default function Vehicles() {
                       className={`p-2 rounded-lg transition-colors ${
                         viewMode === "grid" ? "bg-primary text-primary-foreground" : "hover:bg-accent"
                       }`}
+                      title="Grid view"
                     >
                       <Grid3X3 className="w-5 h-5" />
                     </button>
@@ -275,8 +279,18 @@ export default function Vehicles() {
                       className={`p-2 rounded-lg transition-colors ${
                         viewMode === "list" ? "bg-primary text-primary-foreground" : "hover:bg-accent"
                       }`}
+                      title="List view"
                     >
                       <List className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode("map")}
+                      className={`p-2 rounded-lg transition-colors ${
+                        viewMode === "map" ? "bg-primary text-primary-foreground" : "hover:bg-accent"
+                      }`}
+                      title="Map view"
+                    >
+                      <Map className="w-5 h-5" />
                     </button>
                   </div>
                 </div>
@@ -288,8 +302,15 @@ export default function Vehicles() {
                   </div>
                 )}
 
-                {/* Vehicle Grid */}
-                {!loading && (
+                {/* Map View */}
+                {viewMode === "map" && !loading && (
+                  <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+                    <VendorMap filterType={selectedType} filterPrice={selectedPrice} />
+                  </Suspense>
+                )}
+
+                {/* Vehicle Grid/List */}
+                {!loading && viewMode !== "map" && (
                   <div
                     className={`grid gap-6 ${
                       viewMode === "grid"
@@ -367,7 +388,7 @@ export default function Vehicles() {
                   </div>
                 )}
 
-                {!loading && filteredVehicles.length === 0 && (
+                {!loading && viewMode !== "map" && filteredVehicles.length === 0 && (
                   <div className="text-center py-20">
                     <p className="text-muted-foreground mb-4">No vehicles found matching your filters.</p>
                     <Button
