@@ -144,15 +144,15 @@ export function AddVehicleDialog({ open, onOpenChange, onSuccess }: AddVehicleDi
         seat_capacity: parseInt(formData.seatCapacity),
         mileage: formData.mileage ? parseInt(formData.mileage) : null,
         photos: photoUrls,
-        status: "pending_approval",
+        status: "approved",
         available: true,
       });
 
       if (error) throw error;
 
-      toast({ title: "Vehicle Added!", description: "Your vehicle is pending approval." });
+      toast({ title: "Vehicle Added!", description: "Your vehicle is now live and available for booking." });
       onOpenChange(false);
-      onSuccess();
+      await onSuccess();
       // Reset form
       setFormData({ name: "", brand: "", vehicleType: "", registrationNumber: "", pricePerDay: "", securityDeposit: "", totalQuantity: "1", color: "", fuelType: "petrol", transmission: "manual", engineCapacity: "", seatCapacity: "2", mileage: "" });
       setIconFile(null);
