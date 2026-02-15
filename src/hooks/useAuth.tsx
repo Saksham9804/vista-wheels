@@ -48,6 +48,11 @@ interface PartnerSignUpData {
   city: string;
   numberOfVehicles: number;
   password: string;
+  shopAddress?: string;
+  state?: string;
+  pinCode?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -214,7 +219,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           phone: data.phone,
           city: data.city,
           number_of_vehicles: data.numberOfVehicles,
-          status: "approved", // Auto-approve for demo (change to pending_verification for production)
+          status: "approved",
+          shop_address: data.shopAddress || null,
+          state: data.state || null,
+          pin_code: data.pinCode || null,
+          latitude: data.latitude || null,
+          longitude: data.longitude || null,
         });
 
         if (partnerError) throw partnerError;

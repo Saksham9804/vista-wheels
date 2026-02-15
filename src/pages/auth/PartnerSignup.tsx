@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import PlacesAutocomplete from "@/components/maps/PlacesAutocomplete";
 
 const signupSchema = z.object({
   businessName: z.string().min(3, "Business name must be at least 3 characters"),
@@ -62,6 +63,11 @@ export default function PartnerSignup() {
     password: "",
     confirmPassword: "",
     terms: false,
+    shopAddress: "",
+    state: "",
+    pinCode: "",
+    latitude: 0,
+    longitude: 0,
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -103,6 +109,11 @@ export default function PartnerSignup() {
       city: formData.city,
       numberOfVehicles: formData.numberOfVehicles,
       password: formData.password,
+      shopAddress: formData.shopAddress,
+      state: formData.state,
+      pinCode: formData.pinCode,
+      latitude: formData.latitude,
+      longitude: formData.longitude,
     });
 
     if (error) {
@@ -220,19 +231,29 @@ export default function PartnerSignup() {
             {/* City & Vehicles Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
-                <Select value={formData.city} onValueChange={(value) => handleChange("city", value)}>
-                  <SelectTrigger className={errors.city ? "border-destructive" : ""}>
-                    <SelectValue placeholder="Select city" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cities.map((city) => (
-                      <SelectItem key={city} value={city.toLowerCase()}>
-                        {city}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="shopAddress">Business/Shop Address</Label>
+                <PlacesAutocomplete
+                  value={formData.shopAddress}
+                  onChange={(val) => handleChange("shopAddress", val)}
+                  onPlaceSelect={(place) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      shopAddress: place.address,
+                      city: place.city.toLowerCase(),
+                      state: place.state,
+                      pinCode: place.pinCode,
+                      latitude: place.latitude,
+                      longitude: place.longitude,
+                    }));
+                  }}
+                  placeholder="Search your business address..."
+                  error={!!errors.city}
+                />
+                {formData.city && (
+                  <p className="text-xs text-muted-foreground">
+                    📍 {formData.city}{formData.state ? `, ${formData.state}` : ""}{formData.pinCode ? ` - ${formData.pinCode}` : ""}
+                  </p>
+                )}
                 {errors.city && <p className="text-sm text-destructive">{errors.city}</p>}
               </div>
 
