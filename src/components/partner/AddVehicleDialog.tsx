@@ -314,7 +314,7 @@ export function AddVehicleDialog({ open, onOpenChange, onSuccess }: AddVehicleDi
                 Adding Vehicle...
               </>
             ) : (
-              "Add Vehicle"
+              "Add"
             )}
           </Button>
         </div>
