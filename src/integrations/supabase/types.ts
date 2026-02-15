@@ -174,12 +174,17 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          latitude: number | null
+          longitude: number | null
           number_of_vehicles: number | null
           phone: string
           phone_verified: boolean | null
+          pin_code: string | null
           profile_photo: string | null
           rating: number | null
           rejection_reason: string | null
+          shop_address: string | null
+          state: string | null
           status: Database["public"]["Enums"]["partner_status"] | null
           total_bookings: number | null
           updated_at: string
@@ -194,12 +199,17 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           number_of_vehicles?: number | null
           phone: string
           phone_verified?: boolean | null
+          pin_code?: string | null
           profile_photo?: string | null
           rating?: number | null
           rejection_reason?: string | null
+          shop_address?: string | null
+          state?: string | null
           status?: Database["public"]["Enums"]["partner_status"] | null
           total_bookings?: number | null
           updated_at?: string
@@ -214,12 +224,17 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           number_of_vehicles?: number | null
           phone?: string
           phone_verified?: boolean | null
+          pin_code?: string | null
           profile_photo?: string | null
           rating?: number | null
           rejection_reason?: string | null
+          shop_address?: string | null
+          state?: string | null
           status?: Database["public"]["Enums"]["partner_status"] | null
           total_bookings?: number | null
           updated_at?: string
@@ -249,6 +264,8 @@ export type Database = {
           gender: string | null
           id: string
           last_login: string | null
+          latitude: number | null
+          longitude: number | null
           phone: string | null
           phone_verified: boolean | null
           postal_code: string | null
@@ -280,6 +297,8 @@ export type Database = {
           gender?: string | null
           id?: string
           last_login?: string | null
+          latitude?: number | null
+          longitude?: number | null
           phone?: string | null
           phone_verified?: boolean | null
           postal_code?: string | null
@@ -311,6 +330,8 @@ export type Database = {
           gender?: string | null
           id?: string
           last_login?: string | null
+          latitude?: number | null
+          longitude?: number | null
           phone?: string | null
           phone_verified?: boolean | null
           postal_code?: string | null
