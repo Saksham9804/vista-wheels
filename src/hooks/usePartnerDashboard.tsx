@@ -54,7 +54,10 @@ export function usePartnerDashboard() {
   const partnerId = partner?.id;
 
   const fetchData = async () => {
-    if (!partnerId) return;
+    if (!partnerId) {
+      setLoading(false);
+      return;
+    }
 
     try {
       // Fetch bookings

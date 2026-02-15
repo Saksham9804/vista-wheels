@@ -77,10 +77,10 @@ export function PartnerLayout({ children }: PartnerLayoutProps) {
           <div className="flex items-center justify-between p-4 border-b border-border">
             <Link to="/partner/dashboard" className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-orange">
-                <span className="text-primary-foreground font-bold text-xl">V</span>
+                <span className="text-primary-foreground font-bold text-xl">G</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-xl font-bold text-foreground">Vista</span>
+              <span className="text-xl font-bold text-foreground">Get&Go</span>
                 <span className="text-xs text-primary">Partner Portal</span>
               </div>
             </Link>
