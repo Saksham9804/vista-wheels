@@ -95,7 +95,7 @@ export function AddVehicleDialog({ open, onOpenChange, onSuccess }: AddVehicleDi
     if (!price || price < 200 || price > 10000) errs.pricePerDay = "Price must be ₹200-₹10,000";
     const deposit = parseInt(formData.securityDeposit);
     if (!deposit || deposit < 500) errs.securityDeposit = "Minimum deposit ₹500";
-    if (galleryFiles.length < 3) errs.gallery = "Upload at least 3 gallery images";
+    // Gallery images are optional
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
