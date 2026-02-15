@@ -150,7 +150,7 @@ export function AddVehicleDialog({ open, onOpenChange, onSuccess }: AddVehicleDi
 
       if (error) throw error;
 
-      toast({ title: "Vehicle Added!", description: "Your vehicle is now live and available for booking." });
+      toast({ title: "✅ Vehicle added successfully!", description: "Your vehicle is now live and available for booking." });
       onOpenChange(false);
       await onSuccess();
       // Reset form
@@ -160,7 +160,7 @@ export function AddVehicleDialog({ open, onOpenChange, onSuccess }: AddVehicleDi
       setGalleryFiles([]);
       setGalleryPreviews([]);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Failed to add vehicle", description: error.message });
+      toast({ variant: "destructive", title: "❌ Failed to add vehicle", description: "Please try again. " + error.message });
     } finally {
       setIsSubmitting(false);
     }
