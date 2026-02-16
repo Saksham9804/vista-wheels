@@ -23,6 +23,7 @@ import {
   Map,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import LocationSelector, { type LocationData } from "@/components/maps/LocationSelector";
 
 const VendorMap = lazy(() => import("@/components/maps/VendorMap"));
 
@@ -46,7 +47,17 @@ interface VehicleData {
   pickup_location: string | null;
 }
 
-const cities = ["All Cities", "Delhi", "Mumbai", "Bangalore", "Chennai", "Hyderabad", "Pune", "Goa"];
+// Haversine distance calculation (km)
+function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 const vehicleTypes = [
   { id: "all", name: "All Types", icon: null },
   { id: "bike", name: "Bikes", icon: Bike },
@@ -74,7 +85,8 @@ export default function Vehicles() {
   const [loading, setLoading] = useState(true);
 
   // Filter states
-  const [selectedCity, setSelectedCity] = useState(searchParams.get("city") || "All Cities");
+  const [locationQuery, setLocationQuery] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState<LocationData | null>(null);
   const [selectedType, setSelectedType] = useState(searchParams.get("type") || "all");
   const [selectedPrice, setSelectedPrice] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
@@ -144,10 +156,10 @@ export default function Vehicles() {
     }
 
     return result;
-  }, [vehicles, selectedCity, selectedType, selectedPrice, sortBy, searchQuery]);
+  }, [vehicles, selectedLocation, selectedType, selectedPrice, sortBy, searchQuery]);
 
   const activeFiltersCount = [
-    selectedCity !== "All Cities",
+    selectedLocation !== null,
     selectedType !== "all",
     selectedPrice !== "all",
   ].filter(Boolean).length;
@@ -164,16 +176,26 @@ export default function Vehicles() {
               Find Your Perfect Ride
             </h1>
             <p className="text-muted-foreground mb-4">
-              {loading ? "Loading..." : `${filteredVehicles.length} vehicles available`}
+              {loading ? "Loading..." : `${filteredVehicles.length} vehicles available${selectedLocation ? ` near ${selectedLocation.locality || selectedLocation.formatted_address}` : ""}`}
             </p>
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search vehicles by name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+            <div className="flex flex-col sm:flex-row gap-3 max-w-2xl">
+              <div className="flex-1">
+                <LocationSelector
+                  value={locationQuery}
+                  onChange={setLocationQuery}
+                  onLocationSelect={setSelectedLocation}
+                  placeholder="Search for your location..."
+                />
+              </div>
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search vehicles..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-11 rounded-xl shadow-sm"
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -394,7 +416,7 @@ export default function Vehicles() {
                     <Button
                       variant="outline"
                       onClick={() => {
-                        setSelectedCity("All Cities");
+                        setSelectedLocation(null); setLocationQuery("");
                         setSelectedType("all");
                         setSelectedPrice("all");
                       }}
@@ -476,7 +498,7 @@ export default function Vehicles() {
                   variant="outline"
                   className="w-full"
                   onClick={() => {
-                    setSelectedCity("All Cities");
+                    setSelectedLocation(null); setLocationQuery("");
                     setSelectedType("all");
                     setSelectedPrice("all");
                   }}
