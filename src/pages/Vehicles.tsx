@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import LocationSelector, { type LocationData } from "@/components/maps/LocationSelector";
+import NoServiceMessage from "@/components/vehicles/NoServiceMessage";
 
 const VendorMap = lazy(() => import("@/components/maps/VendorMap"));
 
@@ -78,50 +79,148 @@ const sortOptions = [
 ];
 
 export default function Vehicles() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list" | "map">("grid");
   const [vehicles, setVehicles] = useState<VehicleData[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // City-based partner availability
+  const [cityPartnerCount, setCityPartnerCount] = useState<number | null>(null);
+  const [cityVehicleCount, setCityVehicleCount] = useState<number | null>(null);
+  const [nearbyCities, setNearbyCities] = useState<{ city: string; state: string | null; partner_count: number; vehicle_count: number }[]>([]);
+  const [noServiceCity, setNoServiceCity] = useState<string | null>(null);
+
   // Filter states
-  const [locationQuery, setLocationQuery] = useState("");
+  const [locationQuery, setLocationQuery] = useState(searchParams.get("city") || "");
   const [selectedLocation, setSelectedLocation] = useState<LocationData | null>(null);
   const [selectedType, setSelectedType] = useState(searchParams.get("type") || "all");
   const [selectedPrice, setSelectedPrice] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Fetch vehicles from database
+  // Check partner availability for city and fetch vehicles
   useEffect(() => {
-    const fetchVehicles = async () => {
-      const { data, error } = await supabase
+    const cityParam = searchParams.get("city");
+    if (!cityParam) {
+      // No city filter - fetch all vehicles
+      fetchAllVehicles();
+      setNoServiceCity(null);
+      setCityPartnerCount(null);
+      return;
+    }
+
+    const checkCityAndFetch = async () => {
+      setLoading(true);
+      setNoServiceCity(null);
+
+      // Check if any partners exist in this city (case-insensitive)
+      const { data: partners } = await supabase
+        .from("partners")
+        .select("id, city, state")
+        .eq("status", "approved")
+        .ilike("city", cityParam);
+
+      if (!partners || partners.length === 0) {
+        // No partners in this city - show no-service message
+        setNoServiceCity(cityParam);
+        setCityPartnerCount(0);
+        setCityVehicleCount(0);
+        setVehicles([]);
+
+        // Fetch nearby cities that DO have partners
+        const { data: allPartners } = await supabase
+          .from("partners")
+          .select("id, city, state")
+          .eq("status", "approved");
+
+        if (allPartners) {
+          const cityMap: Record<string, { city: string; state: string | null; count: number }> = {};
+          allPartners.forEach((p) => {
+            const key = p.city.toLowerCase();
+            if (!cityMap[key]) {
+              cityMap[key] = { city: p.city, state: p.state, count: 0 };
+            }
+            cityMap[key].count++;
+          });
+
+          // Get vehicle counts per partner city
+          const citiesWithPartners = Object.values(cityMap);
+          const nearbyWithVehicles = await Promise.all(
+            citiesWithPartners.slice(0, 5).map(async (c) => {
+              const matchingPartnerIds = allPartners
+                .filter((p) => p.city.toLowerCase() === c.city.toLowerCase())
+                .map((p) => p.id);
+              const { count } = await supabase
+                .from("vehicles")
+                .select("*", { count: "exact", head: true })
+                .eq("status", "approved")
+                .eq("available", true)
+                .in("partner_id", matchingPartnerIds);
+
+              return { city: c.city, state: c.state, partner_count: c.count, vehicle_count: count || 0 };
+            })
+          );
+          setNearbyCities(nearbyWithVehicles);
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Partners exist - fetch vehicles from those partners
+      setCityPartnerCount(partners.length);
+      const partnerIds = partners.map(p => p.id);
+
+      const { data: vehicleData, error } = await supabase
         .from("vehicles")
         .select("*")
         .eq("status", "approved")
         .eq("available", true)
+        .in("partner_id", partnerIds)
         .order("created_at", { ascending: false });
 
-      if (!error && data) {
-        setVehicles(data as VehicleData[]);
+      if (!error && vehicleData) {
+        setVehicles(vehicleData as VehicleData[]);
+        setCityVehicleCount(vehicleData.length);
       }
       setLoading(false);
     };
 
-    fetchVehicles();
+    checkCityAndFetch();
 
-    // Realtime subscription for instant updates
+    // Realtime subscription
     const channel = supabase
-      .channel("public-vehicles")
+      .channel("city-vehicles")
       .on("postgres_changes", { event: "*", schema: "public", table: "vehicles" }, () => {
-        fetchVehicles();
+        checkCityAndFetch();
       })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+    return () => { supabase.removeChannel(channel); };
+  }, [searchParams.get("city")]);
+
+  // Fetch all vehicles (no city filter)
+  const fetchAllVehicles = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("vehicles")
+      .select("*")
+      .eq("status", "approved")
+      .eq("available", true)
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setVehicles(data as VehicleData[]);
+    }
+    setLoading(false);
+  };
+
+  // Handle nearby city click from NoServiceMessage
+  const handleNearbyCityClick = (city: string) => {
+    setSearchParams({ city: city.toLowerCase() });
+    setLocationQuery(city);
+    setNoServiceCity(null);
+  };
 
   // Filter and sort vehicles
   const filteredVehicles = useMemo(() => {
@@ -176,7 +275,7 @@ export default function Vehicles() {
               Find Your Perfect Ride
             </h1>
             <p className="text-muted-foreground mb-4">
-              {loading ? "Loading..." : `${filteredVehicles.length} vehicles available${selectedLocation ? ` near ${selectedLocation.locality || selectedLocation.formatted_address}` : ""}`}
+              {loading ? "Loading..." : noServiceCity ? `Searching in ${noServiceCity}...` : `${filteredVehicles.length} vehicles available${cityPartnerCount !== null ? ` from ${cityPartnerCount} partners` : ""}${selectedLocation ? ` near ${selectedLocation.locality || selectedLocation.formatted_address}` : searchParams.get("city") ? ` in ${searchParams.get("city")}` : ""}`}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 max-w-2xl">
               <div className="flex-1">
@@ -324,6 +423,15 @@ export default function Vehicles() {
                   </div>
                 )}
 
+                {/* No Service in City */}
+                {!loading && noServiceCity && (
+                  <NoServiceMessage
+                    cityName={noServiceCity.charAt(0).toUpperCase() + noServiceCity.slice(1)}
+                    nearbyCities={nearbyCities}
+                    onCityClick={handleNearbyCityClick}
+                  />
+                )}
+
                 {/* Map View */}
                 {viewMode === "map" && !loading && (
                   <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
@@ -332,7 +440,7 @@ export default function Vehicles() {
                 )}
 
                 {/* Vehicle Grid/List */}
-                {!loading && viewMode !== "map" && (
+                {!loading && !noServiceCity && viewMode !== "map" && (
                   <div
                     className={`grid gap-6 ${
                       viewMode === "grid"
@@ -410,7 +518,7 @@ export default function Vehicles() {
                   </div>
                 )}
 
-                {!loading && viewMode !== "map" && filteredVehicles.length === 0 && (
+                {!loading && !noServiceCity && viewMode !== "map" && filteredVehicles.length === 0 && (
                   <div className="text-center py-20">
                     <p className="text-muted-foreground mb-4">No vehicles found matching your filters.</p>
                     <Button

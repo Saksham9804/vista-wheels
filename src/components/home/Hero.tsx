@@ -1,12 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Calendar, Clock, Search, Bike, Car, Zap, ChevronDown } from "lucide-react";
+import { Calendar, Clock, Search, Bike, Car, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-
-const cities = [
-  "Delhi", "Mumbai", "Bangalore", "Chennai", "Kolkata", "Hyderabad", "Pune", "Jaipur", "Goa", "Ahmedabad"
-];
+import LocationSelector, { type LocationData } from "@/components/maps/LocationSelector";
 
 const vehicleTypes = [
   { id: "all", name: "All Vehicles", icon: null },
@@ -17,15 +14,21 @@ const vehicleTypes = [
 
 export function Hero() {
   const navigate = useNavigate();
-  const [selectedCity, setSelectedCity] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [pickupDate, setPickupDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
-  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const [locationQuery, setLocationQuery] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState<LocationData | null>(null);
 
   const handleSearch = () => {
     const params = new URLSearchParams();
-    if (selectedCity) params.set("city", selectedCity.toLowerCase());
+    if (selectedLocation) {
+      params.set("city", selectedLocation.locality.toLowerCase());
+      params.set("lat", String(selectedLocation.latitude));
+      params.set("lng", String(selectedLocation.longitude));
+    } else if (locationQuery.trim()) {
+      params.set("city", locationQuery.trim().toLowerCase());
+    }
     if (selectedType !== "all") params.set("type", selectedType);
     if (pickupDate) params.set("pickup", pickupDate);
     if (returnDate) params.set("return", returnDate);
@@ -109,44 +112,18 @@ export function Hero() {
 
             {/* Search Inputs */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* City Selector */}
-              <div className="relative">
+              {/* Location Selector */}
+              <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  Pickup City
+                  Pickup Location
                 </label>
-                <div className="relative">
-                  <button
-                    onClick={() => setShowCityDropdown(!showCityDropdown)}
-                    className="w-full flex items-center gap-3 px-4 py-3 bg-secondary rounded-xl border border-border hover:border-primary/50 transition-colors text-left"
-                  >
-                    <MapPin className="w-5 h-5 text-primary" />
-                    <span className={selectedCity ? "text-foreground" : "text-muted-foreground"}>
-                      {selectedCity || "Select city"}
-                    </span>
-                    <ChevronDown className="w-4 h-4 ml-auto text-muted-foreground" />
-                  </button>
-                  
-                  {showCityDropdown && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-float border border-border max-h-60 overflow-y-auto z-20"
-                    >
-                      {cities.map((city) => (
-                        <button
-                          key={city}
-                          onClick={() => {
-                            setSelectedCity(city);
-                            setShowCityDropdown(false);
-                          }}
-                          className="w-full text-left px-4 py-3 hover:bg-accent transition-colors first:rounded-t-xl last:rounded-b-xl"
-                        >
-                          {city}
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </div>
+                <LocationSelector
+                  value={locationQuery}
+                  onChange={setLocationQuery}
+                  onLocationSelect={setSelectedLocation}
+                  placeholder="Search your city..."
+                  className="[&_input]:bg-secondary [&_input]:border-border [&_input]:hover:border-primary/50 [&_button]:bg-secondary [&_button]:border-border"
+                />
               </div>
 
               {/* Pickup Date */}
