@@ -117,7 +117,8 @@ export function Footer() {
         <div className="mt-12 pt-8 border-t border-primary-foreground/10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex flex-wrap justify-center md:justify-start gap-6">
-              <a className="flex items-center gap-2 text-primary-foreground/70 hover:text-primary transition-colors" href="tel:+919569598949">+91 956 959 8949
+              <a href="tel:+911234567890" className="flex items-center gap-2 text-primary-foreground/70 hover:text-primary transition-colors">9
++91 9569598949
                 <Phone className="w-4 h-4" />
                 +91 123 456 7890
               </a>
@@ -141,5 +142,4 @@ export function Footer() {
         </div>
       </div>
     </footer>);
-
 }
