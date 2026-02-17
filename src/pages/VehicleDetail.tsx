@@ -17,6 +17,7 @@ import {
   Clock,
   Info,
 } from "lucide-react";
+import { PolicySections } from "@/components/vehicles/PolicySection";
 
 // Mock vehicle data (in real app, fetch by ID)
 const vehicleData = {
@@ -269,6 +270,15 @@ export default function VehicleDetail() {
                     ))}
                   </ul>
                 </div>
+              </motion.div>
+
+              {/* Policy Sections */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
+              >
+                <PolicySections />
               </motion.div>
 
               {/* Reviews */}
