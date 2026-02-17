@@ -97,6 +97,14 @@ export default function Vehicles() {
   const [selectedType, setSelectedType] = useState(searchParams.get("type") || "all");
   const [selectedPrice, setSelectedPrice] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
+
+  // When LocationSelector picks a location, update search params to trigger city search
+  const handleLocationSelect = (location: LocationData | null) => {
+    setSelectedLocation(location);
+    if (location?.locality) {
+      setSearchParams({ city: location.locality.toLowerCase(), lat: String(location.latitude), lng: String(location.longitude) });
+    }
+  };
   const [searchQuery, setSearchQuery] = useState("");
 
   // Check partner availability for city and fetch vehicles
@@ -114,12 +122,12 @@ export default function Vehicles() {
       setLoading(true);
       setNoServiceCity(null);
 
-      // Check if any partners exist in this city (case-insensitive)
+      // Check if any partners exist in this city (case-insensitive, also check shop_address)
       const { data: partners } = await supabase
         .from("partners")
-        .select("id, city, state")
+        .select("id, city, state, shop_address")
         .eq("status", "approved")
-        .ilike("city", cityParam);
+        .or(`city.ilike.%${cityParam}%,shop_address.ilike.%${cityParam}%`);
 
       if (!partners || partners.length === 0) {
         // No partners in this city - show no-service message
@@ -282,7 +290,7 @@ export default function Vehicles() {
                 <LocationSelector
                   value={locationQuery}
                   onChange={setLocationQuery}
-                  onLocationSelect={setSelectedLocation}
+                  onLocationSelect={handleLocationSelect}
                   placeholder="Search for your location..."
                 />
               </div>
