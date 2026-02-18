@@ -36,7 +36,6 @@ const INITIAL_FORM = {
   transmission: "manual",
   seatCapacity: "2",
   pricePerDay: "",
-  securityDeposit: "",
 };
 
 export function AddVehicleDialog({
@@ -114,9 +113,6 @@ export function AddVehicleDialog({
     const price = Number(form.pricePerDay);
     if (!price || price < 200 || price > 10000) e.pricePerDay = "Price must be ₹200–₹10,000";
 
-    const deposit = Number(form.securityDeposit);
-    if (!deposit || deposit < 500) e.securityDeposit = "Minimum deposit ₹500";
-
     if (!iconFile) e.icon = "Icon image is required (1:1 ratio)";
 
     if (galleryFiles.length < 3) e.gallery = "Upload at least 3 gallery images";
@@ -179,7 +175,7 @@ export function AddVehicleDialog({
         transmission: form.transmission,
         seat_capacity: Number(form.seatCapacity) || 2,
         price_per_day: Number(form.pricePerDay),
-        security_deposit: Number(form.securityDeposit),
+        security_deposit: 0,
         photos: photoUrls,
         status: "approved",
         available: true,
@@ -340,36 +336,20 @@ export function AddVehicleDialog({
           </div>
 
           {/* Pricing */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Rent Per Day ₹ *</Label>
-              <Input
-                type="number"
-                min={200}
-                max={10000}
-                placeholder="₹500"
-                value={form.pricePerDay}
-                onChange={(e) => set("pricePerDay", e.target.value)}
-                className={errors.pricePerDay ? "border-destructive" : ""}
-              />
-              {errors.pricePerDay && (
-                <p className="text-sm text-destructive">{errors.pricePerDay}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label>Security Deposit ₹ *</Label>
-              <Input
-                type="number"
-                min={500}
-                placeholder="₹1000"
-                value={form.securityDeposit}
-                onChange={(e) => set("securityDeposit", e.target.value)}
-                className={errors.securityDeposit ? "border-destructive" : ""}
-              />
-              {errors.securityDeposit && (
-                <p className="text-sm text-destructive">{errors.securityDeposit}</p>
-              )}
-            </div>
+          <div className="space-y-2">
+            <Label>Rent Per Day ₹ *</Label>
+            <Input
+              type="number"
+              min={200}
+              max={10000}
+              placeholder="₹500"
+              value={form.pricePerDay}
+              onChange={(e) => set("pricePerDay", e.target.value)}
+              className={errors.pricePerDay ? "border-destructive" : ""}
+            />
+            {errors.pricePerDay && (
+              <p className="text-sm text-destructive">{errors.pricePerDay}</p>
+            )}
           </div>
 
           {/* Icon Image */}

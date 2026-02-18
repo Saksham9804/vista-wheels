@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import LocationSelector, { type LocationData } from "@/components/maps/LocationSelector";
 import {
   Check, MapPin, Calendar, CreditCard, FileCheck, ChevronRight,
   Shield, ShieldCheck, AlertTriangle, Loader2, ExternalLink, Info,
-  Navigation, Truck,
+  Navigation, Truck, Banknote,
 } from "lucide-react";
 import { calculateRentalDays, calculatePriceBreakdown, formatDurationMessage } from "@/lib/pricing";
 
@@ -28,7 +29,7 @@ interface NearbyPartner {
   city: string;
   latitude: number;
   longitude: number;
-  distance: number; // in km
+  distance: number;
 }
 
 interface VehicleInfo {
@@ -72,6 +73,8 @@ function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 export default function Booking() {
   const { id } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -82,6 +85,9 @@ export default function Booking() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [doorstepAvailable, setDoorstepAvailable] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryLocation, setDeliveryLocation] = useState<LocationData | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookingId, setBookingId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     pickupLocation: "",
@@ -100,7 +106,7 @@ export default function Booking() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => setUserLocation({ lat: 28.6139, lng: 77.209 }) // Default Delhi
+        () => setUserLocation({ lat: 28.6139, lng: 77.209 })
       );
     } else {
       setUserLocation({ lat: 28.6139, lng: 77.209 });
@@ -155,11 +161,8 @@ export default function Booking() {
         .slice(0, 3);
 
       setNearbyPartners(nearby);
-
-      // Doorstep delivery available if any partner is within 15km
       const hasClosePartner = nearby.some((p) => p.distance <= 15);
       setDoorstepAvailable(hasClosePartner);
-
       setLoadingPartners(false);
     };
     fetchNearbyPartners();
@@ -199,7 +202,6 @@ export default function Booking() {
   };
 
   const handleDoorstepSelect = () => {
-    // Use the closest partner for doorstep delivery
     const closest = nearbyPartners[0];
     setFormData((prev) => ({
       ...prev,
@@ -207,6 +209,13 @@ export default function Booking() {
       pickupPartnerId: closest?.id || "",
       pickupType: "doorstep",
     }));
+  };
+
+  const handleDeliveryLocationSelect = (location: LocationData | null) => {
+    setDeliveryLocation(location);
+    if (location) {
+      setDeliveryAddress(location.formatted_address);
+    }
   };
 
   const pricePerDay = vehicle?.price_per_day || 0;
@@ -234,9 +243,69 @@ export default function Booking() {
       case 1:
         if (formData.pickupType === "doorstep" && !deliveryAddress.trim()) return false;
         return formData.pickupLocation !== "" && formData.pickupDate !== "" && formData.returnDate !== "" && billedDays > 0;
-      case 2: return formData.agreedToTerms && canBook;
+      case 2: return formData.agreedToTerms;
       case 3: return true;
       default: return true;
+    }
+  };
+
+  // Handle booking submission
+  const handleBookingSubmit = async () => {
+    if (!vehicle || !user || !profileData) return;
+    setIsSubmitting(true);
+
+    try {
+      // Get profile id for customer_id
+      const { data: profileRow } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      const pickupDateTime = `${formData.pickupDate}T${formData.pickupTime}:00`;
+      const returnDateTime = `${formData.returnDate}T${formData.returnTime}:00`;
+
+      const isCOD = formData.paymentMethod === "cod";
+
+      const { data: booking, error } = await supabase
+        .from("bookings")
+        .insert({
+          vehicle_id: vehicle.id,
+          partner_id: formData.pickupPartnerId || vehicle.partner_id,
+          customer_id: profileRow?.id || null,
+          customer_name: profileData.full_name,
+          customer_email: profileData.email,
+          customer_phone: profileData.phone || null,
+          pickup_time: pickupDateTime,
+          return_time: returnDateTime,
+          pickup_type: formData.pickupType,
+          pickup_location: formData.pickupLocation,
+          delivery_address: isDoorstep ? deliveryAddress : null,
+          amount: pricing.totalPayable,
+          base_rent: pricing.baseRent,
+          platform_fee: pricing.platformFee,
+          gateway_fee: isCOD ? 0 : pricing.gatewayFee,
+          delivery_charge: pricing.deliveryCharge,
+          security_deposit: securityDeposit,
+          billed_days: billedDays,
+          actual_hours: hours,
+          duration: `${billedDays} day${billedDays > 1 ? "s" : ""}`,
+          status: "confirmed",
+          payment_status: isCOD ? "cod" : "pending",
+          notes: isCOD ? "Cash on Delivery - payment to be collected at pickup/delivery" : null,
+        })
+        .select("id")
+        .single();
+
+      if (error) throw error;
+
+      setBookingId(booking.id);
+      toast({ title: "🎉 Booking confirmed!", description: isCOD ? "Pay cash at the time of pickup/delivery." : "Your booking has been placed successfully." });
+      nextStep();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Booking failed", description: err.message });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -391,16 +460,23 @@ export default function Booking() {
                           </div>
                         </button>
 
-                        {/* Delivery address input when doorstep selected */}
+                        {/* Delivery address with Google Places autocomplete when doorstep selected */}
                         {formData.pickupType === "doorstep" && (
-                          <div className="ml-9">
-                            <label className="block text-sm font-medium text-foreground mb-2">Delivery Address</label>
-                            <Input
-                              placeholder="Enter your full delivery address"
+                          <div className="ml-9 space-y-2">
+                            <label className="block text-sm font-medium text-foreground">Delivery Address</label>
+                            <LocationSelector
                               value={deliveryAddress}
-                              onChange={(e) => setDeliveryAddress(e.target.value)}
+                              onChange={setDeliveryAddress}
+                              onLocationSelect={handleDeliveryLocationSelect}
+                              placeholder="Search for your delivery address..."
                             />
-                            <p className="text-xs text-muted-foreground mt-1">Estimated delivery: ~2 hours from booking confirmation</p>
+                            {deliveryLocation && (
+                              <div className="flex items-center gap-2 text-xs text-primary bg-primary/10 rounded-lg px-3 py-2">
+                                <MapPin className="w-3 h-3" />
+                                <span>Location confirmed: {deliveryLocation.locality || deliveryLocation.formatted_address}</span>
+                              </div>
+                            )}
+                            <p className="text-xs text-muted-foreground">Estimated delivery: ~2 hours from booking confirmation</p>
                           </div>
                         )}
                       </div>
@@ -456,15 +532,15 @@ export default function Booking() {
                     <p className="text-muted-foreground mb-6">Your details from your profile will be used for this booking</p>
 
                     {!canBook && (
-                      <div className="mb-6 p-4 bg-destructive/10 border border-destructive/30 rounded-xl">
+                      <div className="mb-6 p-4 bg-muted border border-border rounded-xl">
                         <div className="flex items-start gap-3">
-                          <AlertTriangle className="w-5 h-5 text-destructive mt-0.5" />
+                          <Info className="w-5 h-5 text-muted-foreground mt-0.5" />
                           <div>
-                            <h3 className="font-semibold text-destructive">Cannot proceed with booking</h3>
-                            <ul className="text-sm text-destructive/80 mt-2 space-y-1">
-                              {!isProfileComplete && <li>• Your profile is incomplete. Please complete signup.</li>}
-                              {!isVerified && isProfileComplete && <li>• Your documents are under verification. You can book once approved.</li>}
-                              {isLicenseExpired && <li>• Your driving license has expired. Please update it.</li>}
+                            <h3 className="font-semibold text-foreground">Profile verification pending</h3>
+                            <ul className="text-sm text-muted-foreground mt-2 space-y-1">
+                              {!isProfileComplete && <li>• Your profile is incomplete. Please complete your profile for faster bookings.</li>}
+                              {!isVerified && isProfileComplete && <li>• Your documents are under verification. Booking will proceed, but pickup requires verified documents.</li>}
+                              {isLicenseExpired && <li>• Your driving license has expired. Please update it before pickup.</li>}
                             </ul>
                           </div>
                         </div>
@@ -509,12 +585,14 @@ export default function Booking() {
                             <p>• Valid driving license required at the time of pickup.</p>
                             <p>• Minimum rental charge: 1 full day (24 hours).</p>
                             <p>• Platform fee of 10% applies on base rent.</p>
-                            <p>• Payment processing fee of 2.5% applies.</p>
+                            <p>• Payment processing fee of 2.5% applies (waived for Cash on Delivery).</p>
                             <p>• Doorstep delivery available for ₹150 extra (within 15 km radius).</p>
                             <p>• Original ID proof required at pickup.</p>
                             <p>• No inter-state travel without prior approval.</p>
                             <p>• Cancellation is free up to 24 hours before pickup.</p>
-                            <p>• Security deposit of ₹{securityDeposit.toLocaleString()} will be refunded within 24-48 hours after return.</p>
+                            {securityDeposit > 0 && (
+                              <p>• Security deposit of ₹{securityDeposit.toLocaleString()} will be refunded within 24-48 hours after return.</p>
+                            )}
                           </div>
 
                           <div className="flex items-start gap-3">
@@ -537,9 +615,10 @@ export default function Booking() {
 
                     <div className="space-y-4 mb-8">
                       {[
-                        { id: "upi", name: "UPI (GPay, PhonePe, Paytm)", desc: "Pay instantly using any UPI app" },
-                        { id: "card", name: "Credit/Debit Card", desc: "Visa, Mastercard, RuPay accepted" },
-                        { id: "netbanking", name: "Net Banking", desc: "All major banks supported" },
+                        { id: "upi", name: "UPI (GPay, PhonePe, Paytm)", desc: "Pay instantly using any UPI app", icon: CreditCard },
+                        { id: "card", name: "Credit/Debit Card", desc: "Visa, Mastercard, RuPay accepted", icon: CreditCard },
+                        { id: "netbanking", name: "Net Banking", desc: "All major banks supported", icon: CreditCard },
+                        { id: "cod", name: "Cash on Delivery", desc: "Pay cash at the time of pickup/delivery. No gateway fee.", icon: Banknote },
                       ].map((method) => (
                         <button
                           key={method.id}
@@ -554,6 +633,7 @@ export default function Booking() {
                             }`}>
                               {formData.paymentMethod === method.id && <Check className="w-3 h-3 text-primary-foreground" />}
                             </div>
+                            <method.icon className="w-5 h-5 text-muted-foreground" />
                             <div>
                               <h3 className="font-semibold text-foreground">{method.name}</h3>
                               <p className="text-sm text-muted-foreground">{method.desc}</p>
@@ -562,6 +642,19 @@ export default function Booking() {
                         </button>
                       ))}
                     </div>
+
+                    {formData.paymentMethod === "cod" && (
+                      <div className="p-4 bg-accent rounded-xl flex items-start gap-3">
+                        <Banknote className="w-5 h-5 text-primary mt-0.5" />
+                        <div className="text-sm">
+                          <p className="font-medium text-foreground">Cash on Delivery selected</p>
+                          <p className="text-muted-foreground mt-1">
+                            Payment gateway fee (2.5%) is waived. Please keep ₹{pricing.totalPayable.toLocaleString()} ready at the time of {isDoorstep ? "delivery" : "pickup"}.
+                            {securityDeposit > 0 && ` Security deposit of ₹${securityDeposit.toLocaleString()} is also payable in cash.`}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -572,12 +665,16 @@ export default function Booking() {
                       <Check className="w-10 h-10 text-primary" />
                     </div>
                     <h2 className="text-2xl font-bold text-foreground mb-2">Booking Confirmed!</h2>
-                    <p className="text-muted-foreground mb-6">Your booking has been successfully placed. Check your email for details.</p>
+                    <p className="text-muted-foreground mb-6">
+                      {formData.paymentMethod === "cod"
+                        ? "Your booking is confirmed. Pay cash at the time of pickup/delivery."
+                        : "Your booking has been successfully placed. Check your email for details."}
+                    </p>
 
                     <div className="bg-secondary rounded-xl p-6 mb-6 max-w-md mx-auto">
                       <div className="text-6xl mb-4">🎉</div>
                       <p className="text-sm text-muted-foreground mb-2">Booking ID</p>
-                      <p className="text-2xl font-bold text-primary">VISTA-{Math.random().toString(36).substring(2, 8).toUpperCase()}</p>
+                      <p className="text-lg font-bold text-primary break-all">{bookingId || "—"}</p>
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -591,9 +688,19 @@ export default function Booking() {
                 {currentStep < 4 && (
                   <div className="flex justify-between mt-8 pt-6 border-t border-border">
                     <Button variant="outline" onClick={prevStep} disabled={currentStep === 1}>Back</Button>
-                    <Button onClick={nextStep} disabled={!isStepValid()} className="flex items-center gap-2">
-                      {currentStep === 3 ? "Pay & Confirm" : "Continue"} <ChevronRight className="w-4 h-4" />
-                    </Button>
+                    {currentStep === 3 ? (
+                      <Button onClick={handleBookingSubmit} disabled={isSubmitting} className="flex items-center gap-2">
+                        {isSubmitting ? (
+                          <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
+                        ) : (
+                          <>{formData.paymentMethod === "cod" ? "Confirm Booking" : "Pay & Confirm"} <ChevronRight className="w-4 h-4" /></>
+                        )}
+                      </Button>
+                    ) : (
+                      <Button onClick={nextStep} disabled={!isStepValid()} className="flex items-center gap-2">
+                        Continue <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 )}
               </motion.div>
@@ -641,10 +748,18 @@ export default function Booking() {
                       <span className="text-muted-foreground">Platform Fee (10%)</span>
                       <span className="font-medium">₹{pricing.platformFee.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Payment Processing (2.5%)</span>
-                      <span className="font-medium">₹{pricing.gatewayFee.toLocaleString()}</span>
-                    </div>
+                    {formData.paymentMethod !== "cod" && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Payment Processing (2.5%)</span>
+                        <span className="font-medium">₹{pricing.gatewayFee.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {formData.paymentMethod === "cod" && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Payment Processing</span>
+                        <span className="font-medium text-primary">Free (COD)</span>
+                      </div>
+                    )}
                     {isDoorstep && (
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Doorstep Delivery</span>
@@ -656,17 +771,19 @@ export default function Booking() {
                       <span className="font-bold text-foreground">Total Payable</span>
                       <span className="font-bold text-primary text-xl">₹{pricing.totalPayable.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between text-sm mt-2">
-                      <span className="text-muted-foreground">Security Deposit (refundable)</span>
-                      <span className="font-medium">₹{securityDeposit.toLocaleString()}</span>
-                    </div>
+                    {securityDeposit > 0 && (
+                      <div className="flex justify-between text-sm mt-2">
+                        <span className="text-muted-foreground">Security Deposit (refundable)</span>
+                        <span className="font-medium">₹{securityDeposit.toLocaleString()}</span>
+                      </div>
+                    )}
                   </div>
                 )}
 
                 <div className="mt-6 pt-6 border-t border-border">
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <Shield className="w-5 h-5 text-primary" />
-                    <span>Secure payment powered by Razorpay</span>
+                    <span>{formData.paymentMethod === "cod" ? "Cash on Delivery — pay at pickup" : "Secure payment powered by Razorpay"}</span>
                   </div>
                 </div>
               </div>
