@@ -33,11 +33,9 @@ export function HowItWorks() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            How It Works
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">How It Works</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Renting a vehicle with Vista is quick and easy. Just follow these three simple steps.
+            Renting a vehicle with Get&Go is quick and easy. Just follow these three simple steps.
           </p>
         </motion.div>
 
@@ -57,7 +55,7 @@ export function HowItWorks() {
             >
               {/* Step Number */}
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-card shadow-soft border border-border mb-6 relative z-10">
-                <step.icon className={`w-8 h-8 ${step.color.split(' ')[1]}`} />
+                <step.icon className={`w-8 h-8 ${step.color.split(" ")[1]}`} />
               </div>
 
               {/* Number Badge */}
@@ -65,12 +63,8 @@ export function HowItWorks() {
                 {index + 1}
               </div>
 
-              <h3 className="text-xl font-bold text-foreground mb-3">
-                {step.title}
-              </h3>
-              <p className="text-muted-foreground max-w-xs mx-auto">
-                {step.description}
-              </p>
+              <h3 className="text-xl font-bold text-foreground mb-3">{step.title}</h3>
+              <p className="text-muted-foreground max-w-xs mx-auto">{step.description}</p>
             </motion.div>
           ))}
         </div>
