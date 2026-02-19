@@ -12,6 +12,8 @@ import Vehicles from "./pages/Vehicles";
 import VehicleDetail from "./pages/VehicleDetail";
 import Booking from "./pages/Booking";
 import NotFound from "./pages/NotFound";
+import TrackBooking from "./pages/TrackBooking";
+import CustomerProfile from "./pages/CustomerProfile";
 
 // Auth Pages
 import CustomerLogin from "./pages/auth/CustomerLogin";
@@ -56,6 +58,22 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["customer"]}>
                   <Booking />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/track/:bookingId"
+              element={
+                <ProtectedRoute allowedRoles={["customer"]}>
+                  <TrackBooking />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute allowedRoles={["customer"]}>
+                  <CustomerProfile />
                 </ProtectedRoute>
               }
             />

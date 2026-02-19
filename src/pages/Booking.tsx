@@ -300,6 +300,25 @@ export default function Booking() {
       if (error) throw error;
 
       setBookingId(booking.id);
+
+      // Create active_booking record for tracking
+      const { data: profileRow2 } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      await supabase.from("active_bookings").insert({
+        booking_id: booking.id,
+        customer_id: profileRow2?.id || profileRow?.id || "",
+        driver_id: formData.pickupPartnerId || vehicle.partner_id,
+        status: "confirmed",
+        pickup_lat: userLocation?.lat || null,
+        pickup_lng: userLocation?.lng || null,
+        drop_lat: deliveryLocation?.latitude || null,
+        drop_lng: deliveryLocation?.longitude || null,
+      });
+
       toast({ title: "🎉 Booking confirmed!", description: isCOD ? "Pay cash at the time of pickup/delivery." : "Your booking has been placed successfully." });
       nextStep();
     } catch (err: any) {
@@ -678,7 +697,15 @@ export default function Booking() {
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                      <Button asChild><Link to="/">Back to Home</Link></Button>
+                      {bookingId && (
+                        <Button asChild className="bg-primary hover:bg-primary/90">
+                          <Link to={`/track/${bookingId}`}>
+                            <Navigation className="w-4 h-4 mr-2" />
+                            Track Your Driver 🚖
+                          </Link>
+                        </Button>
+                      )}
+                      <Button asChild variant="outline"><Link to="/profile">My Bookings</Link></Button>
                       <Button variant="outline" asChild><Link to="/vehicles">Book Another</Link></Button>
                     </div>
                   </div>
