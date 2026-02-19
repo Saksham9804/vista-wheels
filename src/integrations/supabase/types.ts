@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      active_bookings: {
+        Row: {
+          booking_id: string
+          created_at: string
+          customer_id: string
+          driver_id: string | null
+          drop_lat: number | null
+          drop_lng: number | null
+          id: string
+          pickup_lat: number | null
+          pickup_lng: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          customer_id: string
+          driver_id?: string | null
+          drop_lat?: number | null
+          drop_lng?: number | null
+          id?: string
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          customer_id?: string
+          driver_id?: string | null
+          drop_lat?: number | null
+          drop_lng?: number | null
+          id?: string
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           actual_hours: number | null
@@ -122,6 +164,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      driver_locations: {
+        Row: {
+          booking_id: string
+          driver_id: string
+          id: string
+          is_active: boolean
+          lat: number
+          lng: number
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          driver_id: string
+          id?: string
+          is_active?: boolean
+          lat: number
+          lng: number
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          driver_id?: string
+          id?: string
+          is_active?: boolean
+          lat?: number
+          lng?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       partner_documents: {
         Row: {

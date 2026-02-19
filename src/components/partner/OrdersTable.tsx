@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { MoreHorizontal, Phone, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { MoreHorizontal, Phone, Eye, ChevronLeft, ChevronRight, Play, Square } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useDriverLocationPush } from "@/hooks/useDriverLocation";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -54,6 +57,9 @@ export function OrdersTable({ bookings }: OrdersTableProps) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeRideBookingId, setActiveRideBookingId] = useState<string | null>(null);
+  const { isTracking, startTracking, stopTracking } = useDriverLocationPush(activeRideBookingId);
+  const { toast } = useToast();
   const ordersPerPage = 5;
 
   const filteredOrders = bookings.filter((order) => {
@@ -156,6 +162,35 @@ export function OrdersTable({ bookings }: OrdersTableProps) {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem className="flex items-center gap-2"><Eye className="w-4 h-4" />View Details</DropdownMenuItem>
                           <DropdownMenuItem className="flex items-center gap-2"><Phone className="w-4 h-4" />Contact Customer</DropdownMenuItem>
+                          {(order.status === "confirmed" || order.status === "active") && !isTracking && (
+                            <DropdownMenuItem
+                              className="flex items-center gap-2 text-primary"
+                              onClick={async () => {
+                                setActiveRideBookingId(order.id);
+                                // Update active_bookings status
+                                await supabase.from("active_bookings").update({ status: "in_progress" }).eq("booking_id", order.id);
+                                await supabase.from("bookings").update({ status: "active" }).eq("id", order.id);
+                                setTimeout(() => startTracking(), 100);
+                                toast({ title: "🚗 Ride started!", description: "GPS tracking is now active." });
+                              }}
+                            >
+                              <Play className="w-4 h-4" />Start Ride
+                            </DropdownMenuItem>
+                          )}
+                          {isTracking && activeRideBookingId === order.id && (
+                            <DropdownMenuItem
+                              className="flex items-center gap-2 text-destructive"
+                              onClick={async () => {
+                                await stopTracking();
+                                await supabase.from("active_bookings").update({ status: "completed" }).eq("booking_id", order.id);
+                                await supabase.from("bookings").update({ status: "completed" }).eq("id", order.id);
+                                setActiveRideBookingId(null);
+                                toast({ title: "✅ Ride completed!", description: "GPS tracking stopped." });
+                              }}
+                            >
+                              <Square className="w-4 h-4" />End Ride
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>
