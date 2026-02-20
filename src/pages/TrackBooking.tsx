@@ -62,21 +62,30 @@ export default function TrackBooking() {
     fetchBooking();
   }, [bookingId]);
 
-  // Get customer location
+  // Set customer location from booking data first, then try GPS
   useEffect(() => {
+    // Use booking pickup coordinates as immediate fallback
+    if (!customerLocation && bookingInfo) {
+      const pickup = bookingInfo.delivery_address ? 
+        { lat: bookingInfo.pickup_lat || 10.7905, lng: bookingInfo.pickup_lng || 78.7047 } : null;
+      
+      if (bookingDetails?.pickup_lat && bookingDetails?.pickup_lng) {
+        setCustomerLocation({ lat: bookingDetails.pickup_lat, lng: bookingDetails.pickup_lng });
+      } else if (pickup) {
+        setCustomerLocation(pickup);
+      } else {
+        setCustomerLocation({ lat: 10.7905, lng: 78.7047 });
+      }
+    }
+
+    // Try to get real GPS location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setCustomerLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => {
-          if (bookingDetails?.pickup_lat && bookingDetails?.pickup_lng) {
-            setCustomerLocation({ lat: bookingDetails.pickup_lat, lng: bookingDetails.pickup_lng });
-          } else {
-            setCustomerLocation({ lat: 10.7905, lng: 78.7047 });
-          }
-        }
+        () => {} // Already have fallback set above
       );
     }
-  }, [bookingDetails]);
+  }, [bookingDetails, bookingInfo]);
 
   // Smooth marker animation
   useEffect(() => {
@@ -205,7 +214,9 @@ export default function TrackBooking() {
   }
 
   const vehicle = bookingInfo.vehicles;
-  const mapCenter = customerLocation || { lat: 10.7905, lng: 78.7047 };
+  const mapCenter = customerLocation || 
+    (bookingDetails?.pickup_lat ? { lat: bookingDetails.pickup_lat, lng: bookingDetails.pickup_lng } : null) ||
+    { lat: 10.7905, lng: 78.7047 };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
