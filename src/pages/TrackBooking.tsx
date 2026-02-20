@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { GoogleMap, useJsApiLoader, Marker, Polyline } from "@react-google-maps/api";
+import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
 import { GOOGLE_MAPS_API_KEY, GOOGLE_MAPS_LIBRARIES } from "@/lib/googleMaps";
 import { useDriverLocationSubscription, useBookingStatusSubscription } from "@/hooks/useDriverLocation";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,10 +35,12 @@ export default function TrackBooking() {
   const [customerLocation, setCustomerLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [bookingInfo, setBookingInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [eta, setEta] = useState<string | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const prevDriverLocation = useRef<{ lat: number; lng: number } | null>(null);
   const [animatedDriverPos, setAnimatedDriverPos] = useState<{ lat: number; lng: number } | null>(null);
   const animFrameRef = useRef<number | null>(null);
+  const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
@@ -48,7 +50,7 @@ export default function TrackBooking() {
   // Fetch booking info
   useEffect(() => {
     if (!bookingId) return;
-    const fetch = async () => {
+    const fetchBooking = async () => {
       const { data } = await supabase
         .from("bookings")
         .select("*, vehicles(name, brand, vehicle_type, registration_number, photos)")
@@ -57,7 +59,7 @@ export default function TrackBooking() {
       setBookingInfo(data);
       setLoading(false);
     };
-    fetch();
+    fetchBooking();
   }, [bookingId]);
 
   // Get customer location
@@ -66,11 +68,10 @@ export default function TrackBooking() {
       navigator.geolocation.getCurrentPosition(
         (pos) => setCustomerLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
         () => {
-          // Fallback to pickup location from active_bookings
           if (bookingDetails?.pickup_lat && bookingDetails?.pickup_lng) {
             setCustomerLocation({ lat: bookingDetails.pickup_lat, lng: bookingDetails.pickup_lng });
           } else {
-            setCustomerLocation({ lat: 10.7905, lng: 78.7047 }); // Default Trichy
+            setCustomerLocation({ lat: 10.7905, lng: 78.7047 });
           }
         }
       );
@@ -119,17 +120,62 @@ export default function TrackBooking() {
 
   const onMapLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
+    directionsRendererRef.current = new google.maps.DirectionsRenderer({
+      map,
+      suppressMarkers: true,
+      polylineOptions: {
+        strokeColor: "hsl(18, 100%, 55%)",
+        strokeOpacity: 0.8,
+        strokeWeight: 4,
+      },
+    });
   }, []);
+
+  // Directions API route + ETA via Distance Matrix
+  useEffect(() => {
+    if (!mapRef.current || !animatedDriverPos || !customerLocation || !isLoaded) return;
+
+    // Draw route via Directions API
+    const directionsService = new google.maps.DirectionsService();
+    directionsService.route(
+      {
+        origin: new google.maps.LatLng(animatedDriverPos.lat, animatedDriverPos.lng),
+        destination: new google.maps.LatLng(customerLocation.lat, customerLocation.lng),
+        travelMode: google.maps.TravelMode.DRIVING,
+      },
+      (result, routeStatus) => {
+        if (routeStatus === "OK" && directionsRendererRef.current) {
+          directionsRendererRef.current.setDirections(result);
+        }
+      }
+    );
+
+    // ETA via Distance Matrix
+    const distanceService = new google.maps.DistanceMatrixService();
+    distanceService.getDistanceMatrix(
+      {
+        origins: [new google.maps.LatLng(animatedDriverPos.lat, animatedDriverPos.lng)],
+        destinations: [new google.maps.LatLng(customerLocation.lat, customerLocation.lng)],
+        travelMode: google.maps.TravelMode.DRIVING,
+      },
+      (response, matrixStatus) => {
+        if (matrixStatus === "OK" && response) {
+          const element = response.rows[0]?.elements[0];
+          if (element?.status === "OK") {
+            setEta(element.duration?.text || null);
+          }
+        }
+      }
+    );
+  }, [animatedDriverPos, customerLocation, isLoaded]);
 
   // Fit bounds when both markers exist
   useEffect(() => {
-    if (!mapRef.current || !customerLocation) return;
-    if (animatedDriverPos) {
-      const bounds = new google.maps.LatLngBounds();
-      bounds.extend(customerLocation);
-      bounds.extend(animatedDriverPos);
-      mapRef.current.fitBounds(bounds, 80);
-    }
+    if (!mapRef.current || !customerLocation || !animatedDriverPos) return;
+    const bounds = new google.maps.LatLngBounds();
+    bounds.extend(customerLocation);
+    bounds.extend(animatedDriverPos);
+    mapRef.current.fitBounds(bounds, 80);
   }, [animatedDriverPos, customerLocation]);
 
   const currentStepIndex = statusSteps.findIndex((s) => s.key === status);
@@ -181,6 +227,14 @@ export default function TrackBooking() {
               </Badge>
             </div>
 
+            {/* ETA Banner */}
+            {eta && animatedDriverPos && (
+              <div className="bg-primary/10 text-primary rounded-lg px-4 py-2 mb-3 flex items-center gap-2 text-sm font-medium">
+                <Clock className="w-4 h-4" />
+                Driver arrives in {eta}
+              </div>
+            )}
+
             {/* Status Steps */}
             <div className="flex items-center gap-1 overflow-x-auto pb-1">
               {statusSteps.map((step, i) => (
@@ -203,7 +257,7 @@ export default function TrackBooking() {
         </div>
 
         {/* Map */}
-        <div className="flex-1 relative" style={{ minHeight: "400px" }}>
+        <div className="flex-1 relative" style={{ minHeight: "60vh" }}>
           {!isActive && driverLocation && (
             <div className="absolute top-4 left-4 right-4 z-10 bg-destructive/90 text-destructive-foreground rounded-xl p-3 flex items-center gap-2 text-sm">
               <AlertTriangle className="w-4 h-4" />
@@ -244,19 +298,6 @@ export default function TrackBooking() {
                 icon={{
                   url: "https://maps.google.com/mapfiles/ms/icons/cabs/cab.png",
                   scaledSize: new google.maps.Size(40, 40),
-                }}
-              />
-            )}
-
-            {/* Route line between driver and customer */}
-            {animatedDriverPos && customerLocation && (
-              <Polyline
-                path={[animatedDriverPos, customerLocation]}
-                options={{
-                  strokeColor: "hsl(18, 100%, 55%)",
-                  strokeOpacity: 0.8,
-                  strokeWeight: 3,
-                  geodesic: true,
                 }}
               />
             )}

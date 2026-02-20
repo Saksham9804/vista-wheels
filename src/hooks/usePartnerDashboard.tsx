@@ -15,6 +15,7 @@ interface BookingRow {
   customer_name: string | null;
   customer_phone: string | null;
   customer_email: string | null;
+  customer_id: string | null;
   vehicle_id: string;
   pickup_time: string;
   return_time: string;
@@ -23,6 +24,7 @@ interface BookingRow {
   amount: number;
   payment_status: string | null;
   created_at: string;
+  delivery_address: string | null;
   vehicles?: { name: string; registration_number: string } | null;
 }
 
