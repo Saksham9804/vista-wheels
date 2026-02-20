@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { MoreHorizontal, Phone, Eye, ChevronLeft, ChevronRight, Play, Square } from "lucide-react";
+import { MoreHorizontal, Phone, Eye, ChevronLeft, ChevronRight, Play, Square, MapPin, Navigation } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,7 @@ interface BookingRow {
   customer_name: string | null;
   customer_phone: string | null;
   customer_email: string | null;
+  customer_id: string | null;
   vehicle_id: string;
   pickup_time: string;
   return_time: string;
@@ -36,6 +37,7 @@ interface BookingRow {
   amount: number;
   payment_status: string | null;
   created_at: string;
+  delivery_address: string | null;
   vehicles?: { name: string; registration_number: string } | null;
 }
 
@@ -162,6 +164,9 @@ export function OrdersTable({ bookings }: OrdersTableProps) {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem className="flex items-center gap-2"><Eye className="w-4 h-4" />View Details</DropdownMenuItem>
                           <DropdownMenuItem className="flex items-center gap-2"><Phone className="w-4 h-4" />Contact Customer</DropdownMenuItem>
+                          {(order.status === "active" || order.status === "confirmed") && order.delivery_address && (
+                            <TrackDeliveryMenuItem bookingId={order.id} deliveryAddress={order.delivery_address} />
+                          )}
                           {(order.status === "confirmed" || order.status === "active") && !isTracking && (
                             <DropdownMenuItem
                               className="flex items-center gap-2 text-primary"
@@ -215,5 +220,47 @@ export function OrdersTable({ bookings }: OrdersTableProps) {
         </CardContent>
       </Card>
     </motion.div>
+  );
+}
+
+function TrackDeliveryMenuItem({ bookingId, deliveryAddress }: { bookingId: string; deliveryAddress: string }) {
+  const [loading, setLoading] = useState(false);
+
+  const openNavigation = async () => {
+    setLoading(true);
+    try {
+      const { data } = await supabase
+        .from("active_bookings")
+        .select("drop_lat, drop_lng")
+        .eq("booking_id", bookingId)
+        .maybeSingle();
+
+      if (data?.drop_lat && data?.drop_lng) {
+        window.open(
+          `https://www.google.com/maps/dir/?api=1&destination=${data.drop_lat},${data.drop_lng}&travelmode=driving`,
+          "_blank"
+        );
+      } else {
+        // Fallback: use address string
+        window.open(
+          `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(deliveryAddress)}&travelmode=driving`,
+          "_blank"
+        );
+      }
+    } catch {
+      window.open(
+        `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(deliveryAddress)}&travelmode=driving`,
+        "_blank"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <DropdownMenuItem className="flex items-center gap-2 text-primary" onClick={openNavigation} disabled={loading}>
+      <Navigation className="w-4 h-4" />
+      Track Delivery Location
+    </DropdownMenuItem>
   );
 }
