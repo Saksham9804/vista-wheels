@@ -43,9 +43,8 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
         body: { phone: fullPhone },
       });
 
-      // supabase.functions.invoke sets `error` for non-2xx but the real message is in `data`
-      if (data?.error) throw new Error(data.error);
       if (error) throw new Error(error.message);
+      if (data?.success === false || data?.error) throw new Error(data?.error || "Failed to send OTP");
 
       setOtpSent(true);
       setCooldown(30);
