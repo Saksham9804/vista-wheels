@@ -14,17 +14,25 @@ Deno.serve(async (req) => {
     if (!phone || !otp) {
       return new Response(
         JSON.stringify({ verified: false, error: "Phone and OTP are required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const MSG91_AUTHKEY = Deno.env.get("MSG91_AUTHKEY");
-    if (!MSG91_AUTHKEY) throw new Error("MSG91_AUTHKEY is not configured");
+    if (!MSG91_AUTHKEY) {
+      console.error("MSG91_AUTHKEY is not configured");
+      return new Response(
+        JSON.stringify({ verified: false, error: "OTP service is not configured. Please contact support." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Strip the + prefix for MSG91
     const mobileNumber = phone.replace("+", "");
 
     const url = `https://control.msg91.com/api/v5/otp/verify?mobile=${mobileNumber}&otp=${otp}&authkey=${MSG91_AUTHKEY}`;
+
+    console.log("Verifying OTP for mobile:", mobileNumber);
 
     const response = await fetch(url, {
       method: "POST",
@@ -35,9 +43,17 @@ Deno.serve(async (req) => {
     console.log("MSG91 verify OTP response:", JSON.stringify(data));
 
     if (data.type === "error" || data.type !== "success") {
+      const userMessage = data.message === "Mobile no. not found"
+        ? "No OTP was sent to this number. Please request a new OTP."
+        : data.message === "OTP expired"
+        ? "OTP has expired. Please request a new one."
+        : data.message?.toLowerCase().includes("invalid") || data.message?.toLowerCase().includes("wrong")
+        ? "Incorrect OTP. Please try again."
+        : "Verification failed. Please try again.";
+
       return new Response(
-        JSON.stringify({ verified: false, error: data.message || "Invalid OTP. Please try again." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ verified: false, error: userMessage }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -49,8 +65,8 @@ Deno.serve(async (req) => {
     console.error("Error verifying OTP:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ verified: false, error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ verified: false, error: "Something went wrong. Please try again." }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
