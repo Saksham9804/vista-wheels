@@ -1,0 +1,1 @@
+DELETE FROM phone_otps WHERE phone = '+918004311901';
