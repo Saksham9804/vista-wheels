@@ -487,8 +487,8 @@ export default function CustomerSignup() {
                 </>
               )}
 
-              {/* Step 4: Aadhar Card */}
-              {step === 4 && (
+              {/* Step 5: Aadhar Card */}
+              {step === 5 && (
                 <>
                   <div className="space-y-2">
                     <Label>Aadhar Card Number <span className="text-destructive">*</span></Label>
