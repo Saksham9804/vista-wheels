@@ -130,7 +130,14 @@ export default function CustomerSignup() {
   };
 
   const nextStep = () => {
-    if (validateStep(step)) setStep((s) => Math.min(s + 1, 5));
+    if (step === 2) {
+      // Phone verification step - don't allow skipping
+      if (!phoneVerified) {
+        setErrors({ phone: "Please verify your phone number first" });
+        return;
+      }
+    }
+    if (validateStep(step)) setStep((s) => Math.min(s + 1, 6));
   };
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
