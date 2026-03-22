@@ -66,9 +66,9 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
         body: { phone: fullPhone, otp: otpValue },
       });
 
-      if (data?.error) throw new Error(data.error);
       if (error) throw new Error(error.message);
-      if (!data?.verified) throw new Error("Verification failed");
+      if (data?.error) throw new Error(data.error);
+      if (!data?.verified) throw new Error("Verification failed. Please try again.");
 
       setVerified(true);
       toast({ title: "Verified! ✅", description: "Phone number verified successfully." });
