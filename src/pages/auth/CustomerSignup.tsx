@@ -502,8 +502,8 @@ export default function CustomerSignup() {
                 </>
               )}
 
-              {/* Step 5: Review */}
-              {step === 5 && (
+              {/* Step 6: Review */}
+              {step === 6 && (
                 <>
                   <div className="space-y-4">
                     {/* Checklist */}
