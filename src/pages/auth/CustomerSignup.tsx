@@ -288,7 +288,7 @@ export default function CustomerSignup() {
           {/* Progress */}
           <div className="mb-6">
             <div className="flex items-center justify-between text-sm mb-2">
-              <span className="text-muted-foreground">Step {step} of 5 — {signupSteps[step - 1].name}</span>
+              <span className="text-muted-foreground">Step {step} of 6 — {signupSteps[step - 1].name}</span>
               <span className="font-medium text-foreground">{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="h-2" />
