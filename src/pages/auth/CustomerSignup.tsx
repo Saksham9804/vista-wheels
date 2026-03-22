@@ -511,6 +511,7 @@ export default function CustomerSignup() {
                       <h3 className="font-semibold text-foreground">Signup Checklist</h3>
                       {[
                         { label: "Personal details", done: !!formData.fullName && !!formData.email && !!formData.phone },
+                        { label: "Phone verified", done: phoneVerified },
                         { label: "Address & emergency contact", done: !!formData.addressLine1 && !!formData.emergencyContactName },
                         { label: "Driving license uploaded", done: !!files.licenseFront && !!files.licenseBack },
                         { label: "Aadhar card uploaded", done: !!files.aadharFront && !!files.aadharBack },
