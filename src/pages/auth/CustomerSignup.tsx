@@ -151,7 +151,7 @@ export default function CustomerSignup() {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(5)) return;
+    if (!validateStep(6)) return;
     setIsLoading(true);
     try {
       const { error: signUpError } = await signUp(formData.email, formData.password, formData.fullName, formData.phone);
