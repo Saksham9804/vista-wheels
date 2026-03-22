@@ -18,10 +18,11 @@ import { z } from "zod";
 
 const signupSteps = [
   { id: 1, name: "Basic Info", icon: User },
-  { id: 2, name: "Personal Details", icon: MapPin },
-  { id: 3, name: "Driving License", icon: FileText },
-  { id: 4, name: "Aadhar Card", icon: Shield },
-  { id: 5, name: "Review", icon: Check },
+  { id: 2, name: "Phone Verification", icon: Phone },
+  { id: 3, name: "Personal Details", icon: MapPin },
+  { id: 4, name: "Driving License", icon: FileText },
+  { id: 5, name: "Aadhar Card", icon: Shield },
+  { id: 6, name: "Review", icon: Check },
 ];
 
 const passwordRequirements = [
