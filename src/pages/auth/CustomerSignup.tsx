@@ -213,7 +213,7 @@ export default function CustomerSignup() {
   };
 
   const strength = getPasswordStrength();
-  const progress = (step / 5) * 100;
+  const progress = (step / 6) * 100;
 
   const documentsUploaded = [files.licenseFront, files.licenseBack, files.aadharFront, files.aadharBack].filter(Boolean).length;
 
