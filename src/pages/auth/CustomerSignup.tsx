@@ -103,6 +103,8 @@ export default function CustomerSignup() {
       if (formData.password.length < 8) errs.password = "Password must be at least 8 characters";
       if (formData.password !== formData.confirmPassword) errs.confirmPassword = "Passwords do not match";
     } else if (s === 2) {
+      if (!phoneVerified) errs.phone = "Phone verification is required";
+    } else if (s === 3) {
       if (!formData.dateOfBirth) errs.dateOfBirth = "Date of birth is required";
       if (!formData.gender) errs.gender = "Gender is required";
       if (!formData.addressLine1) errs.addressLine1 = "Address is required";
@@ -111,16 +113,16 @@ export default function CustomerSignup() {
       if (!formData.postalCode || !/^[0-9]{6}$/.test(formData.postalCode)) errs.postalCode = "Valid 6-digit postal code required";
       if (!formData.emergencyContactName) errs.emergencyContactName = "Emergency contact name required";
       if (!formData.emergencyContactPhone || !/^[0-9]{10}$/.test(formData.emergencyContactPhone)) errs.emergencyContactPhone = "Valid 10-digit phone required";
-    } else if (s === 3) {
+    } else if (s === 4) {
       if (!formData.drivingLicenseNumber) errs.drivingLicenseNumber = "License number is required";
       if (!formData.drivingLicenseExpiry) errs.drivingLicenseExpiry = "Expiry date is required";
       if (!files.licenseFront) errs.licenseFront = "License front image is required";
       if (!files.licenseBack) errs.licenseBack = "License back image is required";
-    } else if (s === 4) {
+    } else if (s === 5) {
       if (!formData.aadharNumber || !/^[0-9]{12}$/.test(formData.aadharNumber)) errs.aadharNumber = "Valid 12-digit Aadhar number required";
       if (!files.aadharFront) errs.aadharFront = "Aadhar front image is required";
       if (!files.aadharBack) errs.aadharBack = "Aadhar back image is required";
-    } else if (s === 5) {
+    } else if (s === 6) {
       if (!formData.terms) errs.terms = "You must accept terms";
     }
     setErrors(errs);
