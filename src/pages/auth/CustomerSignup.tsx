@@ -55,6 +55,7 @@ export default function CustomerSignup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [fileErrors, setFileErrors] = useState<Record<string, string>>({});
 
