@@ -556,21 +556,23 @@ export default function CustomerSignup() {
             </motion.div>
           </AnimatePresence>
 
-          {/* Navigation */}
-          <div className="flex justify-between mt-8 pt-6 border-t border-border">
-            <Button variant="outline" onClick={prevStep} disabled={step === 1}>
-              <ChevronLeft className="w-4 h-4 mr-1" /> Back
-            </Button>
-            {step < 6 ? (
-              <Button onClick={nextStep}>
-                Continue <ChevronRight className="w-4 h-4 ml-1" />
+          {/* Navigation - hidden on OTP step since it handles its own */}
+          {step !== 2 && (
+            <div className="flex justify-between mt-8 pt-6 border-t border-border">
+              <Button variant="outline" onClick={prevStep} disabled={step === 1}>
+                <ChevronLeft className="w-4 h-4 mr-1" /> Back
               </Button>
-            ) : (
-              <Button onClick={handleSubmit} disabled={isLoading}>
-                {isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating account...</> : "Complete Signup"}
-              </Button>
-            )}
-          </div>
+              {step < 6 ? (
+                <Button onClick={nextStep}>
+                  Continue <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              ) : (
+                <Button onClick={handleSubmit} disabled={isLoading}>
+                  {isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating account...</> : "Complete Signup"}
+                </Button>
+              )}
+            </div>
+          )}
 
           <p className="mt-6 text-center text-muted-foreground">
             Already have an account? <Link to="/login" className="text-primary hover:underline font-medium">Sign in</Link>
