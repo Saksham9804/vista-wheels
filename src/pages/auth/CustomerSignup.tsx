@@ -391,8 +391,20 @@ export default function CustomerSignup() {
                 </>
               )}
 
-              {/* Step 2: Personal Details */}
+              {/* Step 2: Phone OTP Verification */}
               {step === 2 && (
+                <PhoneOtpVerification
+                  phone={formData.phone}
+                  onVerified={() => {
+                    setPhoneVerified(true);
+                    setStep(3);
+                  }}
+                  onBack={() => setStep(1)}
+                />
+              )}
+
+              {/* Step 3: Personal Details */}
+              {step === 3 && (
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
