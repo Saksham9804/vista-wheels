@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import PhoneOtpVerification from "@/components/auth/PhoneOtpVerification";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Eye, EyeOff, Mail, Lock, User, Phone, Loader2, Check, X,
@@ -17,10 +18,11 @@ import { z } from "zod";
 
 const signupSteps = [
   { id: 1, name: "Basic Info", icon: User },
-  { id: 2, name: "Personal Details", icon: MapPin },
-  { id: 3, name: "Driving License", icon: FileText },
-  { id: 4, name: "Aadhar Card", icon: Shield },
-  { id: 5, name: "Review", icon: Check },
+  { id: 2, name: "Phone Verification", icon: Phone },
+  { id: 3, name: "Personal Details", icon: MapPin },
+  { id: 4, name: "Driving License", icon: FileText },
+  { id: 5, name: "Aadhar Card", icon: Shield },
+  { id: 6, name: "Review", icon: Check },
 ];
 
 const passwordRequirements = [
@@ -53,6 +55,7 @@ export default function CustomerSignup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [fileErrors, setFileErrors] = useState<Record<string, string>>({});
 
@@ -100,6 +103,8 @@ export default function CustomerSignup() {
       if (formData.password.length < 8) errs.password = "Password must be at least 8 characters";
       if (formData.password !== formData.confirmPassword) errs.confirmPassword = "Passwords do not match";
     } else if (s === 2) {
+      if (!phoneVerified) errs.phone = "Phone verification is required";
+    } else if (s === 3) {
       if (!formData.dateOfBirth) errs.dateOfBirth = "Date of birth is required";
       if (!formData.gender) errs.gender = "Gender is required";
       if (!formData.addressLine1) errs.addressLine1 = "Address is required";
@@ -108,16 +113,16 @@ export default function CustomerSignup() {
       if (!formData.postalCode || !/^[0-9]{6}$/.test(formData.postalCode)) errs.postalCode = "Valid 6-digit postal code required";
       if (!formData.emergencyContactName) errs.emergencyContactName = "Emergency contact name required";
       if (!formData.emergencyContactPhone || !/^[0-9]{10}$/.test(formData.emergencyContactPhone)) errs.emergencyContactPhone = "Valid 10-digit phone required";
-    } else if (s === 3) {
+    } else if (s === 4) {
       if (!formData.drivingLicenseNumber) errs.drivingLicenseNumber = "License number is required";
       if (!formData.drivingLicenseExpiry) errs.drivingLicenseExpiry = "Expiry date is required";
       if (!files.licenseFront) errs.licenseFront = "License front image is required";
       if (!files.licenseBack) errs.licenseBack = "License back image is required";
-    } else if (s === 4) {
+    } else if (s === 5) {
       if (!formData.aadharNumber || !/^[0-9]{12}$/.test(formData.aadharNumber)) errs.aadharNumber = "Valid 12-digit Aadhar number required";
       if (!files.aadharFront) errs.aadharFront = "Aadhar front image is required";
       if (!files.aadharBack) errs.aadharBack = "Aadhar back image is required";
-    } else if (s === 5) {
+    } else if (s === 6) {
       if (!formData.terms) errs.terms = "You must accept terms";
     }
     setErrors(errs);
@@ -125,7 +130,14 @@ export default function CustomerSignup() {
   };
 
   const nextStep = () => {
-    if (validateStep(step)) setStep((s) => Math.min(s + 1, 5));
+    if (step === 2) {
+      // Phone verification step - don't allow skipping
+      if (!phoneVerified) {
+        setErrors({ phone: "Please verify your phone number first" });
+        return;
+      }
+    }
+    if (validateStep(step)) setStep((s) => Math.min(s + 1, 6));
   };
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
@@ -139,7 +151,7 @@ export default function CustomerSignup() {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(5)) return;
+    if (!validateStep(6)) return;
     setIsLoading(true);
     try {
       const { error: signUpError } = await signUp(formData.email, formData.password, formData.fullName, formData.phone);
@@ -201,7 +213,7 @@ export default function CustomerSignup() {
   };
 
   const strength = getPasswordStrength();
-  const progress = (step / 5) * 100;
+  const progress = (step / 6) * 100;
 
   const documentsUploaded = [files.licenseFront, files.licenseBack, files.aadharFront, files.aadharBack].filter(Boolean).length;
 
@@ -276,7 +288,7 @@ export default function CustomerSignup() {
           {/* Progress */}
           <div className="mb-6">
             <div className="flex items-center justify-between text-sm mb-2">
-              <span className="text-muted-foreground">Step {step} of 5 — {signupSteps[step - 1].name}</span>
+              <span className="text-muted-foreground">Step {step} of 6 — {signupSteps[step - 1].name}</span>
               <span className="font-medium text-foreground">{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="h-2" />
@@ -379,8 +391,20 @@ export default function CustomerSignup() {
                 </>
               )}
 
-              {/* Step 2: Personal Details */}
+              {/* Step 2: Phone OTP Verification */}
               {step === 2 && (
+                <PhoneOtpVerification
+                  phone={formData.phone}
+                  onVerified={() => {
+                    setPhoneVerified(true);
+                    setStep(3);
+                  }}
+                  onBack={() => setStep(1)}
+                />
+              )}
+
+              {/* Step 3: Personal Details */}
+              {step === 3 && (
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -443,8 +467,8 @@ export default function CustomerSignup() {
                 </>
               )}
 
-              {/* Step 3: Driving License */}
-              {step === 3 && (
+              {/* Step 4: Driving License */}
+              {step === 4 && (
                 <>
                   <div className="space-y-2">
                     <Label>Driving License Number <span className="text-destructive">*</span></Label>
@@ -463,8 +487,8 @@ export default function CustomerSignup() {
                 </>
               )}
 
-              {/* Step 4: Aadhar Card */}
-              {step === 4 && (
+              {/* Step 5: Aadhar Card */}
+              {step === 5 && (
                 <>
                   <div className="space-y-2">
                     <Label>Aadhar Card Number <span className="text-destructive">*</span></Label>
@@ -478,8 +502,8 @@ export default function CustomerSignup() {
                 </>
               )}
 
-              {/* Step 5: Review */}
-              {step === 5 && (
+              {/* Step 6: Review */}
+              {step === 6 && (
                 <>
                   <div className="space-y-4">
                     {/* Checklist */}
@@ -487,6 +511,7 @@ export default function CustomerSignup() {
                       <h3 className="font-semibold text-foreground">Signup Checklist</h3>
                       {[
                         { label: "Personal details", done: !!formData.fullName && !!formData.email && !!formData.phone },
+                        { label: "Phone verified", done: phoneVerified },
                         { label: "Address & emergency contact", done: !!formData.addressLine1 && !!formData.emergencyContactName },
                         { label: "Driving license uploaded", done: !!files.licenseFront && !!files.licenseBack },
                         { label: "Aadhar card uploaded", done: !!files.aadharFront && !!files.aadharBack },
@@ -531,21 +556,23 @@ export default function CustomerSignup() {
             </motion.div>
           </AnimatePresence>
 
-          {/* Navigation */}
-          <div className="flex justify-between mt-8 pt-6 border-t border-border">
-            <Button variant="outline" onClick={prevStep} disabled={step === 1}>
-              <ChevronLeft className="w-4 h-4 mr-1" /> Back
-            </Button>
-            {step < 5 ? (
-              <Button onClick={nextStep}>
-                Continue <ChevronRight className="w-4 h-4 ml-1" />
+          {/* Navigation - hidden on OTP step since it handles its own */}
+          {step !== 2 && (
+            <div className="flex justify-between mt-8 pt-6 border-t border-border">
+              <Button variant="outline" onClick={prevStep} disabled={step === 1}>
+                <ChevronLeft className="w-4 h-4 mr-1" /> Back
               </Button>
-            ) : (
-              <Button onClick={handleSubmit} disabled={isLoading}>
-                {isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating account...</> : "Complete Signup"}
-              </Button>
-            )}
-          </div>
+              {step < 6 ? (
+                <Button onClick={nextStep}>
+                  Continue <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              ) : (
+                <Button onClick={handleSubmit} disabled={isLoading}>
+                  {isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating account...</> : "Complete Signup"}
+                </Button>
+              )}
+            </div>
+          )}
 
           <p className="mt-6 text-center text-muted-foreground">
             Already have an account? <Link to="/login" className="text-primary hover:underline font-medium">Sign in</Link>
