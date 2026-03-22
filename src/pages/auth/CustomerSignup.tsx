@@ -560,7 +560,7 @@ export default function CustomerSignup() {
             <Button variant="outline" onClick={prevStep} disabled={step === 1}>
               <ChevronLeft className="w-4 h-4 mr-1" /> Back
             </Button>
-            {step < 5 ? (
+            {step < 6 ? (
               <Button onClick={nextStep}>
                 Continue <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
