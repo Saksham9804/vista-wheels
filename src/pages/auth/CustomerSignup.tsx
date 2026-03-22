@@ -467,8 +467,8 @@ export default function CustomerSignup() {
                 </>
               )}
 
-              {/* Step 3: Driving License */}
-              {step === 3 && (
+              {/* Step 4: Driving License */}
+              {step === 4 && (
                 <>
                   <div className="space-y-2">
                     <Label>Driving License Number <span className="text-destructive">*</span></Label>
