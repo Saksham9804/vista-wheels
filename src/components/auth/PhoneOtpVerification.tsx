@@ -43,8 +43,9 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
         body: { phone: fullPhone },
       });
 
-      if (error) throw new Error(error.message);
+      // supabase.functions.invoke sets `error` for non-2xx but the real message is in `data`
       if (data?.error) throw new Error(data.error);
+      if (error) throw new Error(error.message);
 
       setOtpSent(true);
       setCooldown(30);
@@ -66,8 +67,9 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
         body: { phone: fullPhone, otp: otpValue },
       });
 
+      if (data?.error) throw new Error(data.error);
       if (error) throw new Error(error.message);
-      if (!data?.verified) throw new Error(data?.error || "Verification failed");
+      if (!data?.verified) throw new Error("Verification failed");
 
       setVerified(true);
       toast({ title: "Verified! ✅", description: "Phone number verified successfully." });
