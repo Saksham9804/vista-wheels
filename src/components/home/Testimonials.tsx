@@ -7,31 +7,27 @@ const testimonials = [
     location: "Delhi",
     rating: 5,
     text: "Amazing experience! Booked a Royal Enfield for a weekend trip. The bike was in perfect condition and the pickup was super smooth.",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80",
     vehicle: "Royal Enfield Classic 350",
   },
   {
     name: "Priya Menon",
     location: "Bangalore",
     rating: 5,
-    text: "Best prices in the market! I've compared with other services and Vista always has the lowest rates. Customer support is excellent too.",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80",
+    text: "Best prices in the market! I've compared with other services and GetandGo always has the lowest rates. Customer support is excellent too.",
     vehicle: "Honda Activa 6G",
   },
   {
     name: "Amit Patel",
     location: "Mumbai",
     rating: 5,
-    text: "Rented a car for a family trip to Lonavala. Doorstep delivery saved us so much time. Will definitely use Vista again!",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80",
+    text: "Rented a car for a family trip to Lonavala. Doorstep delivery saved us so much time. Will definitely use GetandGo again!",
     vehicle: "Maruti Swift",
   },
   {
     name: "Sneha Reddy",
     location: "Hyderabad",
     rating: 4,
-    text: "Great selection of scooters. I use Vista for my daily commute whenever my own vehicle is in service. Reliable and affordable!",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&q=80",
+    text: "Great selection of scooters. I use GetandGo for my daily commute whenever my own vehicle is in service. Reliable and affordable!",
     vehicle: "TVS Jupiter",
   },
 ];
@@ -49,7 +45,7 @@ export function Testimonials() {
         >
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">What Our Customers Say</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Join 10,000+ happy riders who trust Vista for their vehicle rental needs
+            Join our happy riders who trust GetandGo for their vehicle rental needs
           </p>
         </motion.div>
 
@@ -117,7 +113,7 @@ export function Testimonials() {
             <div className="flex items-center gap-1">
               <Star className="w-4 h-4 fill-warning text-warning" />
               <span className="font-semibold text-foreground">4.8</span>
-              <span className="text-muted-foreground">from 10,000+ reviews</span>
+              <span className="text-muted-foreground">from 1,000+ reviews</span>
             </div>
           </div>
         </motion.div>
