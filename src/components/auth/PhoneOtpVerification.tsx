@@ -205,6 +205,8 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
 
   return (
     <div className="space-y-6">
+      {/* Captcha container must exist in the DOM before initSendOTP runs and persist across steps */}
+      <div id="msg91-captcha" className="w-full min-h-[80px]" aria-label="MSG91 captcha container" />
       <AnimatePresence mode="wait">
         {step === "phone" ? (
           <motion.div
@@ -238,8 +240,6 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
                 />
               </div>
             </div>
-
-            <div id="msg91-captcha" className="w-full min-h-[80px]" aria-label="MSG91 captcha container" />
 
             <Button onClick={handleSendOtp} disabled={sending || !widgetReady} className="w-full" size="lg">
               {sending ? (
