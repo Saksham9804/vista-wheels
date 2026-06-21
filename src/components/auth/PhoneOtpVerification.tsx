@@ -157,6 +157,7 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
         toast({ title: "OTP sent", description: `Code sent to +${fullPhone}` });
       },
       (err: any) => {
+        console.log('MSG91 sendOtp error:', JSON.stringify(err));
         setSending(false);
         toast({
           variant: "destructive",
