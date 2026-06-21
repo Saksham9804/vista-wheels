@@ -157,6 +157,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "bookings_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "public_partners"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "bookings_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
@@ -232,6 +239,13 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_documents_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "public_partners"
             referencedColumns: ["id"]
           },
         ]
@@ -563,11 +577,71 @@ export type Database = {
             referencedRelation: "partners"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "vehicles_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "public_partners"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      public_partners: {
+        Row: {
+          business_name: string | null
+          business_type: Database["public"]["Enums"]["business_type"] | null
+          city: string | null
+          created_at: string | null
+          id: string | null
+          latitude: number | null
+          longitude: number | null
+          number_of_vehicles: number | null
+          pin_code: string | null
+          profile_photo: string | null
+          rating: number | null
+          shop_address: string | null
+          state: string | null
+          status: Database["public"]["Enums"]["partner_status"] | null
+          total_bookings: number | null
+        }
+        Insert: {
+          business_name?: string | null
+          business_type?: Database["public"]["Enums"]["business_type"] | null
+          city?: string | null
+          created_at?: string | null
+          id?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          number_of_vehicles?: number | null
+          pin_code?: string | null
+          profile_photo?: string | null
+          rating?: number | null
+          shop_address?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["partner_status"] | null
+          total_bookings?: number | null
+        }
+        Update: {
+          business_name?: string | null
+          business_type?: Database["public"]["Enums"]["business_type"] | null
+          city?: string | null
+          created_at?: string | null
+          id?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          number_of_vehicles?: number | null
+          pin_code?: string | null
+          profile_photo?: string | null
+          rating?: number | null
+          shop_address?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["partner_status"] | null
+          total_bookings?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_partner_id: { Args: { _user_id: string }; Returns: string }

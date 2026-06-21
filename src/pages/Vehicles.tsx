@@ -122,12 +122,14 @@ export default function Vehicles() {
       setLoading(true);
       setNoServiceCity(null);
 
+      // Sanitize user input to prevent ILIKE pattern injection (escape %, _, \)
+      const safeCity = cityParam.replace(/[\\%_]/g, "\\$&").slice(0, 100);
       // Check if any partners exist in this city (case-insensitive, also check shop_address)
       const { data: partners } = await supabase
         .from("partners")
         .select("id, city, state, shop_address")
         .eq("status", "approved")
-        .or(`city.ilike.%${cityParam}%,shop_address.ilike.%${cityParam}%`);
+        .or(`city.ilike.%${safeCity}%,shop_address.ilike.%${safeCity}%`);
 
       if (!partners || partners.length === 0) {
         // No partners in this city - show no-service message

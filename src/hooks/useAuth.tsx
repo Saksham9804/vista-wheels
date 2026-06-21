@@ -219,7 +219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           phone: data.phone,
           city: data.city,
           number_of_vehicles: data.numberOfVehicles,
-          status: "approved",
+          status: "pending_verification",
           shop_address: data.shopAddress || null,
           state: data.state || null,
           pin_code: data.pinCode || null,
