@@ -250,13 +250,7 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
   }
 
   return (
-    <div className="space-y-6">
-      {/* Captcha container must exist in the DOM before initSendOTP runs and persist across steps */}
-      <div
-        id="msg91-captcha"
-        className="flex min-h-[92px] w-full items-center justify-center"
-        aria-label="MSG91 captcha container"
-      />
+    <div className="flex flex-col gap-6">
       <AnimatePresence mode="wait">
         {step === "phone" ? (
           <motion.div
@@ -264,7 +258,7 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 10 }}
-            className="space-y-5"
+            className="space-y-5 order-1"
           >
             <div className="text-center">
               <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
@@ -290,7 +284,26 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
                 />
               </div>
             </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
+      {/* Captcha container — must exist in the DOM before initSendOTP runs and persist across steps */}
+      <div
+        id="msg91-captcha"
+        className={`${step === "phone" ? "flex" : "hidden"} order-2 min-h-[92px] w-full items-center justify-center`}
+        aria-label="MSG91 captcha container"
+      />
+
+      <AnimatePresence mode="wait">
+        {step === "phone" ? (
+          <motion.div
+            key="phone-actions"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="space-y-3 order-3"
+          >
             <Button
               onClick={handleSendOtp}
               disabled={sending || !widgetReady || (captchaRequired && (!captchaMounted || !captchaVerified))}
