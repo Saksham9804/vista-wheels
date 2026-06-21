@@ -90,6 +90,8 @@ export function Cities() {
               </Link>
             </motion.div>
           ))}
+        </div>
+      </div>
     </section>
   );
 }
