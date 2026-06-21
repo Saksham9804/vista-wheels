@@ -96,13 +96,11 @@ export default function CustomerLogin() {
             <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-orange">
               <span className="text-primary-foreground font-bold text-xl">V</span>
             </div>
-            <span className="text-2xl font-bold text-foreground">Vista</span>
+            <span className="text-2xl font-bold text-foreground">GetandGo</span>
           </Link>
 
           <h1 className="text-3xl font-bold text-foreground mb-2">Welcome back</h1>
-          <p className="text-muted-foreground mb-8">
-            Sign in to your account to continue
-          </p>
+          <p className="text-muted-foreground mb-8">Sign in to your account to continue</p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
@@ -118,9 +116,7 @@ export default function CustomerLogin() {
                   className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
                 />
               </div>
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email}</p>
-              )}
+              {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
             </div>
 
             <div className="space-y-2">
@@ -143,9 +139,7 @@ export default function CustomerLogin() {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password}</p>
-              )}
+              {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
             </div>
 
             <div className="flex items-center justify-between">
@@ -159,10 +153,7 @@ export default function CustomerLogin() {
                   Remember me
                 </Label>
               </div>
-              <Link
-                to="/forgot-password"
-                className="text-sm text-primary hover:underline"
-              >
+              <Link to="/forgot-password" className="text-sm text-primary hover:underline">
                 Forgot password?
               </Link>
             </div>
@@ -185,9 +176,7 @@ export default function CustomerLogin() {
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or continue with
-                </span>
+                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
               </div>
             </div>
 
@@ -229,10 +218,7 @@ export default function CustomerLogin() {
           </p>
 
           <div className="mt-6 text-center">
-            <Link
-              to="/partner/login"
-              className="text-sm text-muted-foreground hover:text-primary"
-            >
+            <Link to="/partner/login" className="text-sm text-muted-foreground hover:text-primary">
               Are you a vehicle partner? Login here →
             </Link>
           </div>
@@ -254,9 +240,7 @@ export default function CustomerLogin() {
               </div>
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-foreground mb-4">
-            Your ride awaits
-          </h2>
+          <h2 className="text-2xl font-bold text-foreground mb-4">Your ride awaits</h2>
           <p className="text-muted-foreground">
             Access your bookings, manage your profile, and explore our fleet of vehicles across multiple cities.
           </p>
