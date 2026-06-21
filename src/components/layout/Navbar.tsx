@@ -137,9 +137,9 @@ export function Navbar() {
 
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-4">
-            <a href="tel:+911234567890" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+            <a href="tel:+919236451691" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
               <Phone className="w-4 h-4" />
-              +91 123 456 7890
+              +91 923 645 1691
             </a>
             {user ? (
               <DropdownMenu>
