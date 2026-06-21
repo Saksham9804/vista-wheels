@@ -241,8 +241,6 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
               </div>
             </div>
 
-            <div id="msg91-captcha" className="w-full min-h-[80px]" aria-label="MSG91 captcha container" />
-
             <Button onClick={handleSendOtp} disabled={sending || !widgetReady} className="w-full" size="lg">
               {sending ? (
                 <>
