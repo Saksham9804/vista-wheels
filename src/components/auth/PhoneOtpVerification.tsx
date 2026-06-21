@@ -293,7 +293,7 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
 
             <Button
               onClick={handleSendOtp}
-              disabled={sending || !widgetReady || !widgetDataLoaded || (captchaRequired && (!captchaMounted || !captchaVerified))}
+              disabled={sending || !widgetReady || (captchaRequired && (!captchaMounted || !captchaVerified))}
               className="w-full"
               size="lg"
             >
@@ -302,7 +302,7 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Sending OTP...
                 </>
-              ) : !widgetReady || !widgetDataLoaded ? (
+              ) : !widgetReady ? (
                 "Loading..."
               ) : captchaRequired && !captchaMounted ? (
                 "Loading captcha..."
