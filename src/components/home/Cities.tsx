@@ -82,7 +82,7 @@ export function Cities() {
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1 text-sm text-primary-foreground/80">
                       <MapPin className="w-3.5 h-3.5" />
-                      {city.vehicles}+ vehicles
+                      Available
                     </span>
                     <ArrowRight className="w-4 h-4 text-primary-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
