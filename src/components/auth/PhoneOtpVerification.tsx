@@ -40,7 +40,6 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
   const [resending, setResending] = useState(false);
   const [verified, setVerified] = useState(false);
   const [widgetReady, setWidgetReady] = useState(false);
-  const [widgetDataLoaded, setWidgetDataLoaded] = useState(false);
   const [captchaRequired, setCaptchaRequired] = useState(false);
   const [captchaVerified, setCaptchaVerified] = useState(false);
   const [captchaMounted, setCaptchaMounted] = useState(false);
@@ -59,21 +58,22 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
 
       const widgetData = typeof window.getWidgetData === "function" ? window.getWidgetData() : null;
       const hasMethods = typeof window.sendOtp === "function";
+      const container = document.getElementById("msg91-captcha");
+      const hasCaptchaMarkup = Boolean(container?.querySelector("iframe, h-captcha"));
+      const isVerified = typeof window.isCaptchaVerified === "function" ? window.isCaptchaVerified() : false;
+
+      setWidgetReady(hasMethods);
+      setCaptchaMounted(hasCaptchaMarkup);
+      setCaptchaVerified(isVerified);
 
       if (widgetData) {
         const requiresCaptcha = Boolean(widgetData?.captchaValidations);
-        const container = document.getElementById("msg91-captcha");
-        const hasCaptchaMarkup = Boolean(container?.querySelector("iframe, h-captcha"));
-        const isVerified = typeof window.isCaptchaVerified === "function" ? window.isCaptchaVerified() : false;
-
-        setWidgetDataLoaded(true);
         setCaptchaRequired(requiresCaptcha);
         setCaptchaMounted(!requiresCaptcha || hasCaptchaMarkup);
         setCaptchaVerified(!requiresCaptcha || isVerified);
       }
 
-      if (hasMethods && widgetData) {
-        setWidgetReady(true);
+      if (hasMethods) {
         return true;
       }
 
@@ -293,7 +293,7 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
 
             <Button
               onClick={handleSendOtp}
-              disabled={sending || !widgetReady || !widgetDataLoaded || (captchaRequired && (!captchaMounted || !captchaVerified))}
+              disabled={sending || !widgetReady || (captchaRequired && (!captchaMounted || !captchaVerified))}
               className="w-full"
               size="lg"
             >
@@ -302,7 +302,7 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Sending OTP...
                 </>
-              ) : !widgetReady || !widgetDataLoaded ? (
+              ) : !widgetReady ? (
                 "Loading..."
               ) : captchaRequired && !captchaMounted ? (
                 "Loading captcha..."
