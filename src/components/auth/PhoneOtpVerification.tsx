@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { Phone, Loader2, CheckCircle2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Phone, Loader2, CheckCircle2, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -14,86 +16,175 @@ interface PhoneOtpVerificationProps {
 declare global {
   interface Window {
     initSendOTP?: (config: Record<string, unknown>) => void;
+    sendOtp?: (identifier: string, success: (data: any) => void, failure: (err: any) => void) => void;
+    verifyOtp?: (otp: string | number, success: (data: any) => void, failure: (err: any) => void, reqId?: string) => void;
+    retryOtp?: (
+      channel: string | null,
+      success: (data: any) => void,
+      failure: (err: any) => void,
+      reqId?: string,
+    ) => void;
   }
 }
 
-const MSG91_WIDGET_ID = "366675664b41373039323936";
-const MSG91_TOKEN_AUTH = "543318TQMuWQUl6a379044P1";
-
 export default function PhoneOtpVerification({ phone, onVerified, onBack }: PhoneOtpVerificationProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [verified, setVerified] = useState(false);
   const { toast } = useToast();
-  const launchedRef = useRef(false);
+  const [phoneInput, setPhoneInput] = useState(phone?.replace(/\D/g, "") ?? "");
+  const [otp, setOtp] = useState("");
+  const [reqId, setReqId] = useState<string | null>(null);
+  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [widgetReady, setWidgetReady] = useState(false);
+  const initRef = useRef(false);
 
-  const fullPhone = phone.startsWith("+") ? phone.replace(/\D/g, "") : `91${phone.replace(/\D/g, "")}`;
+  const fullPhone = phoneInput.startsWith("91") ? phoneInput : `91${phoneInput}`;
+
+  // Initialize MSG91 widget once script + config are ready
+  useEffect(() => {
+    let cancelled = false;
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const init = async () => {
+      if (initRef.current) return;
+      const { data, error } = await supabase.functions.invoke("get-msg91-config");
+      if (cancelled) return;
+      if (error || !data?.success) {
+        toast({ variant: "destructive", title: "OTP unavailable", description: "Could not load OTP config." });
+        return;
+      }
+
+      const tryInit = () => {
+        if (typeof window.initSendOTP !== "function") return false;
+        initRef.current = true;
+        window.initSendOTP({
+          widgetId: data.widgetId,
+          tokenAuth: data.tokenAuth,
+          exposeMethods: true,
+          success: () => {},
+          failure: () => {},
+        });
+        // exposed methods become available shortly after init
+        const check = setInterval(() => {
+          if (typeof window.sendOtp === "function") {
+            setWidgetReady(true);
+            clearInterval(check);
+          }
+        }, 150);
+        return true;
+      };
+
+      if (!tryInit()) {
+        interval = setInterval(() => {
+          if (tryInit() && interval) clearInterval(interval);
+        }, 200);
+      }
+    };
+
+    init();
+    return () => {
+      cancelled = true;
+      if (interval) clearInterval(interval);
+    };
+  }, [toast]);
+
+  const handleSendOtp = () => {
+    if (!/^\d{10,12}$/.test(phoneInput)) {
+      toast({ variant: "destructive", title: "Invalid phone", description: "Enter a valid mobile number." });
+      return;
+    }
+    if (!widgetReady || typeof window.sendOtp !== "function") {
+      toast({ variant: "destructive", title: "Please wait", description: "OTP service is still loading." });
+      return;
+    }
+    setSending(true);
+    window.sendOtp(
+      fullPhone,
+      (data: any) => {
+        setSending(false);
+        const rid = data?.message ?? data?.reqId ?? data?.request_id ?? null;
+        setReqId(typeof rid === "string" ? rid : null);
+        setStep("otp");
+        toast({ title: "OTP sent", description: `Code sent to +${fullPhone}` });
+      },
+      (err: any) => {
+        setSending(false);
+        toast({
+          variant: "destructive",
+          title: "Could not send OTP",
+          description: err?.message || "Try again in a moment.",
+        });
+      },
+    );
+  };
 
   const verifyTokenOnServer = async (accessToken: string) => {
-    setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("verify-otp-token", {
-        body: { accessToken },
-      });
+      const { data, error } = await supabase.functions.invoke("verify-otp-token", { body: { accessToken } });
       if (error) throw new Error(error.message);
       if (!data?.verified) throw new Error(data?.error || "Verification failed");
-
       setVerified(true);
       toast({ title: "Verified! ✅", description: "Phone number verified successfully." });
-      setTimeout(onVerified, 1000);
+      setTimeout(onVerified, 900);
     } catch (e: any) {
       toast({ variant: "destructive", title: "Verification Failed", description: e.message });
-      launchedRef.current = false;
     } finally {
-      setIsLoading(false);
+      setVerifying(false);
     }
   };
 
-  const launchWidget = () => {
-    if (launchedRef.current) return;
-    if (typeof window.initSendOTP !== "function") {
-      toast({
-        variant: "destructive",
-        title: "OTP service unavailable",
-        description: "MSG91 widget failed to load. Please refresh and try again.",
-      });
+  const handleVerify = () => {
+    if (otp.length !== 6) {
+      toast({ variant: "destructive", title: "Enter 6-digit code" });
       return;
     }
-
-    launchedRef.current = true;
-    window.initSendOTP({
-      widgetId: MSG91_WIDGET_ID,
-      tokenAuth: MSG91_TOKEN_AUTH,
-      identifier: fullPhone,
-      exposeMethods: false,
-      success: (data: any) => {
+    if (typeof window.verifyOtp !== "function") return;
+    setVerifying(true);
+    window.verifyOtp(
+      otp,
+      (data: any) => {
         const accessToken: string | undefined = data?.message ?? data?.["access-token"] ?? data;
         if (!accessToken || typeof accessToken !== "string") {
-          toast({ variant: "destructive", title: "Verification Failed", description: "Missing access token from MSG91." });
-          launchedRef.current = false;
+          setVerifying(false);
+          toast({ variant: "destructive", title: "Verification Failed", description: "Missing access token." });
           return;
         }
         verifyTokenOnServer(accessToken);
       },
-      failure: (error: any) => {
-        console.error("MSG91 widget failure:", error);
+      (err: any) => {
+        setVerifying(false);
         toast({
           variant: "destructive",
-          title: "OTP Failed",
-          description: error?.message || "Could not verify OTP.",
+          title: "Invalid OTP",
+          description: err?.message || "Please check the code and try again.",
         });
-        launchedRef.current = false;
       },
-    });
+      reqId ?? undefined,
+    );
   };
 
-  // Wait for the MSG91 script (loaded from index.html) to be ready
-  useEffect(() => {
-    if (typeof window.initSendOTP === "function") return;
-    const interval = setInterval(() => {
-      if (typeof window.initSendOTP === "function") clearInterval(interval);
-    }, 200);
-    return () => clearInterval(interval);
-  }, []);
+  const handleResend = () => {
+    if (typeof window.retryOtp !== "function") return;
+    setResending(true);
+    window.retryOtp(
+      null,
+      () => {
+        setResending(false);
+        toast({ title: "OTP resent", description: `New code sent to +${fullPhone}` });
+      },
+      (err: any) => {
+        setResending(false);
+        toast({
+          variant: "destructive",
+          title: "Resend failed",
+          description: err?.message || "Try again shortly.",
+        });
+      },
+      reqId ?? undefined,
+    );
+  };
 
   if (verified) {
     return (
@@ -106,39 +197,136 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
           <CheckCircle2 className="w-8 h-8 text-primary" />
         </div>
         <h3 className="text-lg font-semibold text-foreground">Phone Verified!</h3>
-        <p className="text-sm text-muted-foreground">Your number +{fullPhone} has been verified.</p>
+        <p className="text-sm text-muted-foreground">+{fullPhone}</p>
       </motion.div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-          <Phone className="w-7 h-7 text-primary" />
-        </div>
-        <h3 className="text-lg font-semibold text-foreground">Verify Your Phone Number</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          We'll send a verification code to +{fullPhone} via MSG91
-        </p>
-      </div>
+      <AnimatePresence mode="wait">
+        {step === "phone" ? (
+          <motion.div
+            key="phone"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 10 }}
+            className="space-y-5"
+          >
+            <div className="text-center">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                <Phone className="w-7 h-7 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground">Verify Your Phone</h3>
+              <p className="text-sm text-muted-foreground mt-1">We'll send you a 6-digit code via SMS</p>
+            </div>
 
-      <Button onClick={launchWidget} disabled={isLoading} className="w-full" size="lg">
-        {isLoading ? (
-          <>
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Verifying...
-          </>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Mobile number</Label>
+              <div className="flex gap-2">
+                <div className="flex items-center px-3 rounded-md border bg-muted text-sm font-medium">+91</div>
+                <Input
+                  id="phone"
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="98765 43210"
+                  value={phoneInput}
+                  onChange={(e) => setPhoneInput(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  className="flex-1"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <Button onClick={handleSendOtp} disabled={sending || !widgetReady} className="w-full" size="lg">
+              {sending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Sending OTP...
+                </>
+              ) : !widgetReady ? (
+                "Loading..."
+              ) : (
+                "Send OTP"
+              )}
+            </Button>
+
+            {onBack && (
+              <Button variant="ghost" onClick={onBack} className="w-full">
+                ← Back
+              </Button>
+            )}
+          </motion.div>
         ) : (
-          "Send & Verify OTP"
-        )}
-      </Button>
+          <motion.div
+            key="otp"
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            className="space-y-5"
+          >
+            <div className="text-center">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                <KeyRound className="w-7 h-7 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground">Enter the code</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Sent to +{fullPhone}{" "}
+                <button
+                  type="button"
+                  onClick={() => setStep("phone")}
+                  className="text-primary font-medium hover:underline"
+                >
+                  Change
+                </button>
+              </p>
+            </div>
 
-      {onBack && (
-        <Button variant="ghost" onClick={onBack} className="w-full">
-          ← Change Phone Number
-        </Button>
-      )}
+            <div className="space-y-2">
+              <Label htmlFor="otp">6-digit code</Label>
+              <Input
+                id="otp"
+                type="text"
+                inputMode="numeric"
+                placeholder="● ● ● ● ● ●"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                className="text-center text-2xl tracking-[0.5em] font-semibold"
+                maxLength={6}
+                autoFocus
+              />
+            </div>
+
+            <Button
+              onClick={handleVerify}
+              disabled={verifying || otp.length !== 6}
+              className="w-full"
+              size="lg"
+            >
+              {verifying ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                "Verify"
+              )}
+            </Button>
+
+            <div className="text-center text-sm text-muted-foreground">
+              Didn't receive it?{" "}
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resending}
+                className="text-primary font-medium hover:underline disabled:opacity-50"
+              >
+                {resending ? "Resending..." : "Resend OTP"}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
