@@ -181,30 +181,6 @@ export function Hero() {
             </div>
           </motion.div>
 
-          {/* Trust Badges */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="mt-10 flex flex-wrap justify-center gap-8 text-muted-foreground"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-foreground">10,000+</span>
-              <span className="text-sm">Happy Customers</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-foreground">500+</span>
-              <span className="text-sm">Vehicles</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-foreground">50+</span>
-              <span className="text-sm">Cities</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-foreground">4.8★</span>
-              <span className="text-sm">Rating</span>
-            </div>
-          </motion.div>
         </div>
       </div>
     </section>
