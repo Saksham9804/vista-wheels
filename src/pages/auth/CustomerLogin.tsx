@@ -30,7 +30,19 @@ export default function CustomerLogin() {
 
   const from = location.state?.from?.pathname || "/";
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    const { error } = await signInWithGoogle();
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Google Sign-In Failed",
+        description: error.message || "Unable to sign in with Google.",
+      });
+    }
+    // OAuth redirect happens on success — no need to navigate
+    setIsLoading(false);
+  };
     e.preventDefault();
     setErrors({});
 
