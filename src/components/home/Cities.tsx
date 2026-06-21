@@ -6,37 +6,31 @@ const cities = [
   {
     name: "Delhi",
     image: "https://images.unsplash.com/photo-1587474260584-136574528ed5?w=600&q=80",
-    vehicles: 120,
     slug: "delhi",
   },
   {
     name: "Mumbai",
     image: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=600&q=80",
-    vehicles: 95,
     slug: "mumbai",
   },
   {
     name: "Bangalore",
     image: "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=600&q=80",
-    vehicles: 85,
     slug: "bangalore",
   },
   {
     name: "Goa",
     image: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=600&q=80",
-    vehicles: 60,
     slug: "goa",
   },
   {
     name: "Jaipur",
     image: "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&q=80",
-    vehicles: 55,
     slug: "jaipur",
   },
   {
     name: "Chennai",
     image: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=600&q=80",
-    vehicles: 70,
     slug: "chennai",
   },
 ];
@@ -52,9 +46,7 @@ export function Cities() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            We're in Your City
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">We're in Your City</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Available across 50+ cities in India with convenient pickup locations
           </p>
@@ -80,15 +72,13 @@ export function Cities() {
                   alt={city.name}
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
-                
+
                 {/* Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-charcoal/90 via-charcoal/40 to-transparent" />
-                
+
                 {/* Content */}
                 <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h3 className="text-lg font-bold text-primary-foreground mb-1">
-                    {city.name}
-                  </h3>
+                  <h3 className="text-lg font-bold text-primary-foreground mb-1">{city.name}</h3>
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1 text-sm text-primary-foreground/80">
                       <MapPin className="w-3.5 h-3.5" />
@@ -109,10 +99,7 @@ export function Cities() {
           viewport={{ once: true }}
           className="text-center mt-10"
         >
-          <Link
-            to="/cities"
-            className="inline-flex items-center gap-2 text-primary font-medium hover:underline"
-          >
+          <Link to="/cities" className="inline-flex items-center gap-2 text-primary font-medium hover:underline">
             View all 50+ cities
             <ArrowRight className="w-4 h-4" />
           </Link>
