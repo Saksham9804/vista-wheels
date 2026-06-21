@@ -41,7 +41,7 @@ export function Hero() {
       const returnD = new Date(returnDate);
       const diffTime = Math.abs(returnD.getTime() - pickup.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays > 0 ? `${diffDays} day${diffDays > 1 ? 's' : ''}` : null;
+      return diffDays > 0 ? `${diffDays} day${diffDays > 1 ? "s" : ""}` : null;
     }
     return null;
   };
@@ -60,11 +60,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-          >
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent text-accent-foreground text-sm font-medium mb-6">
-              🚗 Available in 50+ cities across India
-            </span>
-          </motion.div>
+          ></motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
@@ -72,8 +68,7 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground mb-6 leading-tight"
           >
-            Rent Your Perfect Ride{" "}
-            <span className="text-gradient">Anywhere in India</span>
+            Rent Your Perfect Ride <span className="text-gradient">Anywhere in India</span>
           </motion.h1>
 
           <motion.p
@@ -82,7 +77,8 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto"
           >
-            India's largest fleet of bikes, scooters & cars. Easy booking, doorstep delivery, and 24/7 support at the best prices.
+            India's largest fleet of bikes, scooters & cars. Easy booking, doorstep delivery, and 24/7 support at the
+            best prices.
           </motion.p>
 
           {/* Search Card */}
@@ -114,9 +110,7 @@ export function Hero() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Location Selector */}
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  Pickup Location
-                </label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Pickup Location</label>
                 <LocationSelector
                   value={locationQuery}
                   onChange={setLocationQuery}
@@ -128,16 +122,14 @@ export function Hero() {
 
               {/* Pickup Date */}
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  Pickup Date
-                </label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Pickup Date</label>
                 <div className="relative">
                   <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary pointer-events-none" />
                   <input
                     type="date"
                     value={pickupDate}
                     onChange={(e) => setPickupDate(e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
+                    min={new Date().toISOString().split("T")[0]}
                     className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border border-border hover:border-primary/50 focus:border-primary focus:outline-none transition-colors"
                   />
                 </div>
@@ -145,16 +137,14 @@ export function Hero() {
 
               {/* Return Date */}
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  Return Date
-                </label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Return Date</label>
                 <div className="relative">
                   <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary pointer-events-none" />
                   <input
                     type="date"
                     value={returnDate}
                     onChange={(e) => setReturnDate(e.target.value)}
-                    min={pickupDate || new Date().toISOString().split('T')[0]}
+                    min={pickupDate || new Date().toISOString().split("T")[0]}
                     className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border border-border hover:border-primary/50 focus:border-primary focus:outline-none transition-colors"
                   />
                 </div>
@@ -168,19 +158,13 @@ export function Hero() {
                     Duration: <span className="font-semibold text-primary">{calculateDuration()}</span>
                   </div>
                 )}
-                <Button 
-                  variant="hero" 
-                  size="lg" 
-                  className="w-full"
-                  onClick={handleSearch}
-                >
+                <Button variant="hero" size="lg" className="w-full" onClick={handleSearch}>
                   <Search className="w-5 h-5" />
                   Search Vehicles
                 </Button>
               </div>
             </div>
           </motion.div>
-
         </div>
       </div>
     </section>
