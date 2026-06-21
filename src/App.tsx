@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Vehicles from "./pages/Vehicles";
 import VehicleDetail from "./pages/VehicleDetail";
 import Booking from "./pages/Booking";
+import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import TrackBooking from "./pages/TrackBooking";
 import CustomerProfile from "./pages/CustomerProfile";
@@ -41,6 +42,7 @@ const App = () => (
             {/* Public Routes */}
             <Route path="/" element={<Index />} />
             <Route path="/vehicles" element={<Vehicles />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/vehicles/:id" element={<VehicleDetail />} />
             
             {/* Customer Auth Routes */}
