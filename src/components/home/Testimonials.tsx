@@ -80,7 +80,9 @@ export function Testimonials() {
 
               {/* Author */}
               <div className="flex items-center gap-4">
-                <img src={testimonial.avatar} alt={testimonial.name} className="w-12 h-12 rounded-full object-cover" />
+                <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold">
+                  {testimonial.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                </div>
                 <div>
                   <h4 className="font-semibold text-foreground">{testimonial.name}</h4>
                   <p className="text-sm text-muted-foreground">
@@ -102,12 +104,12 @@ export function Testimonials() {
           <div className="inline-flex items-center gap-3 px-6 py-3 bg-accent rounded-full">
             <div className="flex -space-x-2">
               {testimonials.slice(0, 4).map((t, i) => (
-                <img
+                <div
                   key={i}
-                  src={t.avatar}
-                  alt=""
-                  className="w-8 h-8 rounded-full border-2 border-background object-cover"
-                />
+                  className="w-8 h-8 rounded-full border-2 border-background bg-primary/10 text-primary text-xs flex items-center justify-center font-semibold"
+                >
+                  {t.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                </div>
               ))}
             </div>
             <div className="flex items-center gap-1">
