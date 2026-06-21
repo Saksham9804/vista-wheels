@@ -69,6 +69,14 @@ for (const table of createdTables) {
     `CREATE\\s+POLICY[^;]+ON\\s+(?:public\\.)?${table}\\b`,
     "i",
   );
+  // Opt-out marker for tables that intentionally have no client access
+  // (server-only via service_role). Add `-- @security-ignore: <table> reason`
+  // to a migration to suppress policy/grant checks for that table.
+  const ignoreRe = new RegExp(
+    `--\\s*@security-ignore:\\s*${table}\\b`,
+    "i",
+  );
+  const ignored = ignoreRe.test(allMigrationSql);
 
   if (!rlsRe.test(allMigrationSql))
     failures.push({
@@ -76,17 +84,17 @@ for (const table of createdTables) {
       file: "supabase/migrations/*",
       detail: `Table public.${table} has no ENABLE ROW LEVEL SECURITY`,
     });
-  if (!grantRe.test(allMigrationSql))
-    failures.push({
+  if (!ignored && !grantRe.test(allMigrationSql))
+    warnings.push({
       check: "grants-present",
       file: "supabase/migrations/*",
-      detail: `Table public.${table} has no GRANT — PostgREST will reject all access`,
+      detail: `Table public.${table} has no explicit GRANT in a migration (default grants may apply on legacy projects)`,
     });
-  if (!policyRe.test(allMigrationSql))
+  if (!ignored && !policyRe.test(allMigrationSql))
     failures.push({
       check: "policy-present",
       file: "supabase/migrations/*",
-      detail: `Table public.${table} has no CREATE POLICY — RLS will deny all rows`,
+      detail: `Table public.${table} has no CREATE POLICY — RLS will deny all rows. Add a policy or '-- @security-ignore: ${table} <reason>' if server-only.`,
     });
 }
 
