@@ -31,7 +31,7 @@ const socialLinks = [
   { icon: Facebook, href: "#" },
   { icon: Twitter, href: "#" },
   { icon: Instagram, href: "#" },
-  { icon: Linkedin, href: "#" },
+  { icon: Linkedin, href: "https://www.linkedin.com/company/132464207" },
 ];
 
 export function Footer() {
