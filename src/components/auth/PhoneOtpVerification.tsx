@@ -138,6 +138,14 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
       toast({ variant: "destructive", title: "Please wait", description: "OTP service is still loading." });
       return;
     }
+    if (captchaRequired && !captchaMounted) {
+      toast({ variant: "destructive", title: "Captcha loading", description: "Please wait for captcha to appear." });
+      return;
+    }
+    if (captchaRequired && !captchaVerified) {
+      toast({ variant: "destructive", title: "Complete captcha", description: "Please verify the captcha before sending OTP." });
+      return;
+    }
     setSending(true);
     window.sendOtp(
       fullPhone,
@@ -244,7 +252,11 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
   return (
     <div className="space-y-6">
       {/* Captcha container must exist in the DOM before initSendOTP runs and persist across steps */}
-      <div id="msg91-captcha" className="w-full min-h-[80px]" aria-label="MSG91 captcha container" />
+      <div
+        id="msg91-captcha"
+        className="flex min-h-[92px] w-full items-center justify-center"
+        aria-label="MSG91 captcha container"
+      />
       <AnimatePresence mode="wait">
         {step === "phone" ? (
           <motion.div
@@ -279,14 +291,23 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
               </div>
             </div>
 
-            <Button onClick={handleSendOtp} disabled={sending || !widgetReady} className="w-full" size="lg">
+            <Button
+              onClick={handleSendOtp}
+              disabled={sending || !widgetReady || !widgetDataLoaded || (captchaRequired && (!captchaMounted || !captchaVerified))}
+              className="w-full"
+              size="lg"
+            >
               {sending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Sending OTP...
                 </>
-              ) : !widgetReady ? (
+              ) : !widgetReady || !widgetDataLoaded ? (
                 "Loading..."
+              ) : captchaRequired && !captchaMounted ? (
+                "Loading captcha..."
+              ) : captchaRequired && !captchaVerified ? (
+                "Complete captcha first"
               ) : (
                 "Send OTP"
               )}
