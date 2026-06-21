@@ -63,8 +63,7 @@ export default function ForgotPassword() {
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">Check your email</h1>
           <p className="text-muted-foreground mb-8">
-            We've sent a password reset link to <strong>{email}</strong>. 
-            The link will expire in 1 hour.
+            We've sent a password reset link to <strong>{email}</strong>. The link will expire in 1 hour.
           </p>
           <Button asChild variant="outline">
             <Link to="/login">
@@ -90,13 +89,11 @@ export default function ForgotPassword() {
           <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-orange">
             <span className="text-primary-foreground font-bold text-xl">V</span>
           </div>
-          <span className="text-2xl font-bold text-foreground">Vista</span>
+          <span className="text-2xl font-bold text-foreground">GetandGo</span>
         </Link>
 
         <h1 className="text-3xl font-bold text-foreground mb-2">Forgot password?</h1>
-        <p className="text-muted-foreground mb-8">
-          No worries, we'll send you reset instructions.
-        </p>
+        <p className="text-muted-foreground mb-8">No worries, we'll send you reset instructions.</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
@@ -128,10 +125,7 @@ export default function ForgotPassword() {
         </form>
 
         <div className="mt-8 text-center">
-          <Link
-            to="/login"
-            className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-2"
-          >
+          <Link to="/login" className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" />
             Back to login
           </Link>

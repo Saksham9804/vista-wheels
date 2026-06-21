@@ -12,25 +12,28 @@ import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import PlacesAutocomplete from "@/components/maps/PlacesAutocomplete";
 
-const signupSchema = z.object({
-  businessName: z.string().min(3, "Business name must be at least 3 characters"),
-  businessType: z.string().min(1, "Please select a business type"),
-  email: z.string().email("Please enter a valid email address"),
-  phone: z.string().regex(/^[0-9]{10}$/, "Please enter a valid 10-digit phone number"),
-  city: z.string().min(1, "Please select a city"),
-  numberOfVehicles: z.number().min(1, "You must have at least 1 vehicle"),
-  password: z.string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "Must contain uppercase")
-    .regex(/[a-z]/, "Must contain lowercase")
-    .regex(/[0-9]/, "Must contain number")
-    .regex(/[^A-Za-z0-9]/, "Must contain special character"),
-  confirmPassword: z.string(),
-  terms: z.boolean().refine((val) => val === true, "You must accept the terms"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+const signupSchema = z
+  .object({
+    businessName: z.string().min(3, "Business name must be at least 3 characters"),
+    businessType: z.string().min(1, "Please select a business type"),
+    email: z.string().email("Please enter a valid email address"),
+    phone: z.string().regex(/^[0-9]{10}$/, "Please enter a valid 10-digit phone number"),
+    city: z.string().min(1, "Please select a city"),
+    numberOfVehicles: z.number().min(1, "You must have at least 1 vehicle"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Z]/, "Must contain uppercase")
+      .regex(/[a-z]/, "Must contain lowercase")
+      .regex(/[0-9]/, "Must contain number")
+      .regex(/[^A-Za-z0-9]/, "Must contain special character"),
+    confirmPassword: z.string(),
+    terms: z.boolean().refine((val) => val === true, "You must accept the terms"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 const businessTypes = [
   { value: "individual", label: "Individual Owner" },
@@ -40,8 +43,16 @@ const businessTypes = [
 ];
 
 const cities = [
-  "Delhi", "Mumbai", "Bangalore", "Chennai", "Kolkata", 
-  "Hyderabad", "Pune", "Jaipur", "Ahmedabad", "Goa"
+  "Delhi",
+  "Mumbai",
+  "Bangalore",
+  "Chennai",
+  "Kolkata",
+  "Hyderabad",
+  "Pune",
+  "Jaipur",
+  "Ahmedabad",
+  "Goa",
 ];
 
 const passwordRequirements = [
@@ -128,7 +139,7 @@ export default function PartnerSignup() {
 
     toast({
       title: "Registration Successful!",
-      description: "Welcome to Vista Partner Program! You can now access your dashboard.",
+      description: "Welcome to GetandGo Partner Program! You can now access your dashboard.",
     });
 
     navigate("/partner/dashboard");
@@ -149,14 +160,12 @@ export default function PartnerSignup() {
             <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-orange">
               <span className="text-primary-foreground font-bold text-xl">V</span>
             </div>
-            <span className="text-2xl font-bold text-foreground">Vista</span>
+            <span className="text-2xl font-bold text-foreground">GetandGo</span>
             <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">Partner</span>
           </Link>
 
           <h1 className="text-3xl font-bold text-foreground mb-2">Become a Partner</h1>
-          <p className="text-muted-foreground mb-8">
-            Rent out your vehicles and earn passive income
-          </p>
+          <p className="text-muted-foreground mb-8">Rent out your vehicles and earn passive income</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Business Name */}
@@ -251,7 +260,9 @@ export default function PartnerSignup() {
                 />
                 {formData.city && (
                   <p className="text-xs text-muted-foreground">
-                    📍 {formData.city}{formData.state ? `, ${formData.state}` : ""}{formData.pinCode ? ` - ${formData.pinCode}` : ""}
+                    📍 {formData.city}
+                    {formData.state ? `, ${formData.state}` : ""}
+                    {formData.pinCode ? ` - ${formData.pinCode}` : ""}
                   </p>
                 )}
                 {errors.city && <p className="text-sm text-destructive">{errors.city}</p>}

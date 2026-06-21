@@ -78,14 +78,12 @@ export default function PartnerLogin() {
             <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-orange">
               <span className="text-primary-foreground font-bold text-xl">V</span>
             </div>
-            <span className="text-2xl font-bold text-foreground">Vista</span>
+            <span className="text-2xl font-bold text-foreground">GetandGo</span>
             <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">Partner</span>
           </Link>
 
           <h1 className="text-3xl font-bold text-foreground mb-2">Partner Login</h1>
-          <p className="text-muted-foreground mb-8">
-            Manage your vehicle listings and bookings
-          </p>
+          <p className="text-muted-foreground mb-8">Manage your vehicle listings and bookings</p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
@@ -101,9 +99,7 @@ export default function PartnerLogin() {
                   className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
                 />
               </div>
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email}</p>
-              )}
+              {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
             </div>
 
             <div className="space-y-2">
@@ -126,9 +122,7 @@ export default function PartnerLogin() {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password}</p>
-              )}
+              {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
             </div>
 
             <div className="flex items-center justify-between">
@@ -142,10 +136,7 @@ export default function PartnerLogin() {
                   Remember me
                 </Label>
               </div>
-              <Link
-                to="/partner/forgot-password"
-                className="text-sm text-primary hover:underline"
-              >
+              <Link to="/partner/forgot-password" className="text-sm text-primary hover:underline">
                 Forgot password?
               </Link>
             </div>
@@ -170,10 +161,7 @@ export default function PartnerLogin() {
           </p>
 
           <div className="mt-6 text-center">
-            <Link
-              to="/login"
-              className="text-sm text-muted-foreground hover:text-primary"
-            >
+            <Link to="/login" className="text-sm text-muted-foreground hover:text-primary">
               ← Back to Customer Login
             </Link>
           </div>
@@ -191,19 +179,12 @@ export default function PartnerLogin() {
           <div className="w-24 h-24 mx-auto mb-8 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-orange">
             <Building2 className="w-12 h-12 text-primary-foreground" />
           </div>
-          <h2 className="text-2xl font-bold text-foreground mb-4">
-            Partner Dashboard
-          </h2>
+          <h2 className="text-2xl font-bold text-foreground mb-4">Partner Dashboard</h2>
           <p className="text-muted-foreground mb-8">
             Access your vehicle listings, track bookings, and monitor your earnings all in one place.
           </p>
           <div className="grid grid-cols-2 gap-4 text-left">
-            {[
-              "Manage Vehicles",
-              "Track Bookings",
-              "View Analytics",
-              "Earnings Reports",
-            ].map((item) => (
+            {["Manage Vehicles", "Track Bookings", "View Analytics", "Earnings Reports"].map((item) => (
               <div key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
                 <div className="w-2 h-2 rounded-full bg-primary" />
                 {item}

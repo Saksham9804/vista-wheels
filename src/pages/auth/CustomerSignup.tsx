@@ -865,7 +865,7 @@ export default function CustomerSignup() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="max-w-lg"
         >
-          <h2 className="text-2xl font-bold text-foreground mb-8">Why join Vista?</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-8">Why join GetandGo?</h2>
           <div className="space-y-6">
             {[
               { title: "Book in 30 seconds", desc: "Quick and easy booking process" },
