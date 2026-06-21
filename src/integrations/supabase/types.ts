@@ -590,6 +590,7 @@ export type Database = {
     Views: {
       public_partners: {
         Row: {
+          approved_at: string | null
           business_name: string | null
           business_type: Database["public"]["Enums"]["business_type"] | null
           city: string | null
@@ -605,8 +606,11 @@ export type Database = {
           state: string | null
           status: Database["public"]["Enums"]["partner_status"] | null
           total_bookings: number | null
+          updated_at: string | null
+          user_id: string | null
         }
         Insert: {
+          approved_at?: string | null
           business_name?: string | null
           business_type?: Database["public"]["Enums"]["business_type"] | null
           city?: string | null
@@ -622,8 +626,11 @@ export type Database = {
           state?: string | null
           status?: Database["public"]["Enums"]["partner_status"] | null
           total_bookings?: number | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
+          approved_at?: string | null
           business_name?: string | null
           business_type?: Database["public"]["Enums"]["business_type"] | null
           city?: string | null
@@ -639,6 +646,8 @@ export type Database = {
           state?: string | null
           status?: Database["public"]["Enums"]["partner_status"] | null
           total_bookings?: number | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
