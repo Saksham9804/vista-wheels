@@ -1,0 +1,26 @@
+# Gitleaks config for Lovable project
+# Publishable Supabase keys (anon + URL) are public-by-design and excluded.
+title = "GetAndGo Gitleaks Config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allowlist for public/publishable values that are safe to commit"
+paths = [
+  '''src/integrations/supabase/client\.ts''',
+  '''\.env$''',
+  '''supabase/config\.toml''',
+]
+regexes = [
+  # Supabase publishable anon JWT (safe to commit)
+  '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+''',
+  # Google Maps client key (intended to be public; must be restricted in GCP console)
+  '''AIza[0-9A-Za-z_-]{35}''',
+]
+
+[[rules]]
+id = "supabase-service-role-key"
+description = "Supabase service_role JWT must never be committed"
+regex = '''"role"\s*:\s*"service_role"'''
+tags = ["key", "supabase"]

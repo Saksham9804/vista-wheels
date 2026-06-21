@@ -25,3 +25,6 @@ GRANT SELECT (
   phone_verified, rating, total_bookings, status, created_at, updated_at,
   approved_at, approved_by, rejection_reason
 ) ON public.partners TO anon;
+
+-- @security-ignore: phone_otps — server-only table accessed exclusively via service_role from edge functions; no client policies needed.
+
