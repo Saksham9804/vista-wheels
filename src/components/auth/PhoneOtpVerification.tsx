@@ -147,6 +147,7 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
       return;
     }
     setSending(true);
+    console.log('Captcha verified?', window.isCaptchaVerified?.());
     window.sendOtp(
       fullPhone,
       (data: any) => {
