@@ -24,6 +24,8 @@ declare global {
       failure: (err: any) => void,
       reqId?: string,
     ) => void;
+    getWidgetData?: () => Record<string, any> | null | undefined;
+    isCaptchaVerified?: () => boolean;
   }
 }
 
@@ -38,6 +40,10 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
   const [resending, setResending] = useState(false);
   const [verified, setVerified] = useState(false);
   const [widgetReady, setWidgetReady] = useState(false);
+  const [widgetDataLoaded, setWidgetDataLoaded] = useState(false);
+  const [captchaRequired, setCaptchaRequired] = useState(false);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
+  const [captchaMounted, setCaptchaMounted] = useState(false);
   const initRef = useRef(false);
 
   const fullPhone = phoneInput.startsWith("91") ? phoneInput : `91${phoneInput}`;
@@ -45,7 +51,40 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
   // Initialize MSG91 widget once script + config are ready
   useEffect(() => {
     let cancelled = false;
-    let interval: ReturnType<typeof setInterval> | null = null;
+    let initInterval: ReturnType<typeof setInterval> | null = null;
+    let statusInterval: ReturnType<typeof setInterval> | null = null;
+
+    const syncWidgetStatus = () => {
+      if (cancelled) return false;
+
+      const widgetData = typeof window.getWidgetData === "function" ? window.getWidgetData() : null;
+      const hasMethods = typeof window.sendOtp === "function";
+
+      if (widgetData) {
+        const requiresCaptcha = Boolean(widgetData?.captchaValidations);
+        const container = document.getElementById("msg91-captcha");
+        const hasCaptchaMarkup = Boolean(container?.querySelector("iframe, h-captcha"));
+        const isVerified = typeof window.isCaptchaVerified === "function" ? window.isCaptchaVerified() : false;
+
+        setWidgetDataLoaded(true);
+        setCaptchaRequired(requiresCaptcha);
+        setCaptchaMounted(!requiresCaptcha || hasCaptchaMarkup);
+        setCaptchaVerified(!requiresCaptcha || isVerified);
+      }
+
+      if (hasMethods && widgetData) {
+        setWidgetReady(true);
+        return true;
+      }
+
+      return false;
+    };
+
+    const startStatusPolling = () => {
+      if (statusInterval) return;
+      syncWidgetStatus();
+      statusInterval = setInterval(syncWidgetStatus, 300);
+    };
 
     const init = async () => {
       if (initRef.current) return;
@@ -64,22 +103,20 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
           tokenAuth: data.tokenAuth,
           captchaRenderId: "msg91-captcha",
           exposeMethods: true,
+          exposedMethods: true,
+          captchaVerified: (isVerified: boolean) => {
+            if (!cancelled) setCaptchaVerified(Boolean(isVerified));
+          },
           success: () => {},
           failure: () => {},
         });
-        // exposed methods become available shortly after init
-        const check = setInterval(() => {
-          if (typeof window.sendOtp === "function") {
-            setWidgetReady(true);
-            clearInterval(check);
-          }
-        }, 150);
+        startStatusPolling();
         return true;
       };
 
       if (!tryInit()) {
-        interval = setInterval(() => {
-          if (tryInit() && interval) clearInterval(interval);
+        initInterval = setInterval(() => {
+          if (tryInit() && initInterval) clearInterval(initInterval);
         }, 200);
       }
     };
@@ -87,7 +124,8 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
     init();
     return () => {
       cancelled = true;
-      if (interval) clearInterval(interval);
+      if (initInterval) clearInterval(initInterval);
+      if (statusInterval) clearInterval(statusInterval);
     };
   }, [toast]);
 
