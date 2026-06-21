@@ -62,6 +62,7 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
         window.initSendOTP({
           widgetId: data.widgetId,
           tokenAuth: data.tokenAuth,
+          captchaRenderId: "msg91-captcha",
           exposeMethods: true,
           success: () => {},
           failure: () => {},
@@ -237,6 +238,8 @@ export default function PhoneOtpVerification({ phone, onVerified, onBack }: Phon
                 />
               </div>
             </div>
+
+            <div id="msg91-captcha" className="w-full min-h-[80px]" aria-label="MSG91 captcha container" />
 
             <Button onClick={handleSendOtp} disabled={sending || !widgetReady} className="w-full" size="lg">
               {sending ? (
