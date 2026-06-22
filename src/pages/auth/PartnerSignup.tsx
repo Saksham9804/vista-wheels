@@ -158,7 +158,7 @@ export default function PartnerSignup() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 mb-8">
             <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-orange">
-              <span className="text-primary-foreground font-bold text-sm">G&G</span>
+              <span className="text-primary-foreground font-bold text-sm">G</span>
             </div>
             <span className="text-2xl font-bold text-foreground">GetandGo</span>
             <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">Partner</span>
