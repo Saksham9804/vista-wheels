@@ -94,7 +94,7 @@ export default function CustomerLogin() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 mb-8">
             <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-orange">
-              <span className="text-primary-foreground font-bold text-sm">G&G</span>
+              <span className="text-primary-foreground font-bold text-sm">G</span>
             </div>
             <span className="text-2xl font-bold text-foreground">GetandGo</span>
           </Link>
@@ -236,7 +236,7 @@ export default function CustomerLogin() {
           <div className="w-64 h-64 mx-auto mb-8 rounded-full bg-gradient-primary/20 flex items-center justify-center">
             <div className="w-48 h-48 rounded-full bg-gradient-primary/30 flex items-center justify-center">
               <div className="w-32 h-32 rounded-full bg-gradient-primary flex items-center justify-center shadow-orange">
-                <span className="text-5xl font-bold text-primary-foreground">G&G</span>
+                <span className="text-5xl font-bold text-primary-foreground">G</span>
               </div>
             </div>
           </div>
