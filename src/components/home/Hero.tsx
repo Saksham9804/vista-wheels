@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Clock, Search, Bike, Car, Zap } from "lucide-react";
+import { Calendar, Clock, Search, Bike, Car, Zap, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import LocationSelector, { type LocationData } from "@/components/maps/LocationSelector";
@@ -164,6 +164,23 @@ export function Hero() {
                 </Button>
               </div>
             </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.45 }}
+            className="mt-6 flex justify-center"
+          >
+            <Button
+              variant="outline"
+              size="lg"
+              className="gap-2 border-primary/40 text-foreground hover:bg-primary hover:text-primary-foreground"
+              onClick={() => navigate("/explore")}
+            >
+              <Compass className="w-5 h-5" />
+              Explore the City
+            </Button>
           </motion.div>
         </div>
       </div>

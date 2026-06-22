@@ -15,6 +15,7 @@ import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import TrackBooking from "./pages/TrackBooking";
 import CustomerProfile from "./pages/CustomerProfile";
+import ExploreCity from "./pages/ExploreCity";
 
 // Auth Pages
 import CustomerLogin from "./pages/auth/CustomerLogin";
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/vehicles" element={<Vehicles />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/vehicles/:id" element={<VehicleDetail />} />
+            <Route path="/explore" element={<ExploreCity />} />
             
             {/* Customer Auth Routes */}
             <Route path="/login" element={<CustomerLogin />} />
