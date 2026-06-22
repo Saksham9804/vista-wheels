@@ -27,11 +27,7 @@ export function CTA() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              variant="glass"
-              size="xl"
-              asChild
-            >
+            <Button variant="glass" size="xl" asChild>
               <Link to="/vehicles" className="flex items-center gap-2">
                 Browse Vehicles
                 <ArrowRight className="w-5 h-5" />
@@ -43,7 +39,7 @@ export function CTA() {
               asChild
               className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
             >
-              <a href="tel:+911234567890" className="flex items-center gap-2">
+              <a href="tel:+919236451691" className="flex items-center gap-2">
                 <Phone className="w-5 h-5" />
                 Call Us Now
               </a>
